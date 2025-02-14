@@ -30,9 +30,35 @@ Very fast Voronoi diagram display
 I have pretty much no formal knowledge on this subject, so I tried to make something relatively efficient, at least on my computer. I will mainly be comparing this approach with the simpler approach of finding which cell each pixel belongs to, which I will call the "naive" approach.
 
 - **Naive approach**
-    This approach is very slow on my computer, and that's because I was using only the CPU. It should be pretty fast on a GPU, but I can't be bothered. The complexity is basically $O(N\times n)$, with $N$ being the number of pixels in the image and $n$ being the number of cells. This $N$ value can be very large, and I tried to mitigate this issue with this repo and the following approach.
+    This approach is very slow on my computer, and that's because I was using only the CPU. It should be pretty fast on a GPU, but I can't be bothered. The complexity is basically $O(N\times n)$, with $N$ being the number of pixels in the image and $n$ being the number of cells. This $N$ value can be very large, and I tried to mitigate this issue with this repo and the following approach.  
+    This approach can be tested as well, an implementation has been made in the `test.py` file (`bad_voronoi(points)`).
 
 - **Current approach**
     I tried to treat each cell as one unit, because I wouldn't use that many cells when compared to the possible number of pixels in the image. This way I thought it was a good idea to spend like 8 hours on finding a mathematically slower approach in $O(n^3)$, because here $n$ is significantly smaller than $N$ (if it isn't, either you're doing something wrong, or you should use the naive approach and this repo isn't for you).
 
 ## Performance
+
+These times are in seconds, an average of 3, run on my computer, only here for you to get a rough idea of the performance gain.  
+I'm giving 4 non-zero digits no matter the time it takes, so we can easily see which times are smaller.  
+The times for the current approach also include any eventual collision removal time, although I think this is too rare to have any impact and is just extra flex.
+
+### 1 cell
+||32x32|640x480|1280x720|1920x1080|
+|-|-|-|-|-|
+|Naive approach|0.0006667|0.1420|0.4253|0.9464|
+|Current approach|**0**|**0**|**0**|**0** (yes)|
+
+### 10 cells
+||32x32|640x480|1280x720|1920x1080|
+|-|-|-|-|-|
+|Naive approach|**0.0009933**|0.361|1.079|2.405|
+|Current approach|0.001002|**0.001672**|**0.001678**|**0.001001**|
+
+### 100 cells
+||32x32|640x480|1280x720|1920x1080|
+|-|-|-|-|-|
+|Naive approach|**0.008667**|2.446|7.343|16.59|
+|Current approach|1.4189|**1.5077**|**1.5340**|**1.5137**|
+
+The faster values are **bold** for each test.
+As you can see, the naive approach takes a lot more time when the screen size increases, while the current approach doesn't care and just increases rapidly when the number of cells increase.

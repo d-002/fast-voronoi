@@ -46,6 +46,28 @@ def display(points, neighbors, polygons):
     for x, y in points:
         pygame.draw.rect(screen, black, Rect(x-1, y-1, 3, 3))
 
+def bad_voronoi(points, step=2):
+    # cache cells colors
+    colors = [rand_col() for _ in range(len(points))]
+
+    # draw cells
+    for x in range(0, w, step):
+        for y in range(0, h, step):
+            min = None
+            mind = 0
+
+            for i, pos in enumerate(points):
+                dx, dy = pos[0]-x, pos[1]-y
+                d = dx*dx + dy*dy
+
+                if d < mind or min is None:
+                    min = i
+                    mind = d
+
+            pygame.draw.rect(screen, colors[min], Rect(x, y, step, step))
+
+    pygame.display.flip()
+
 # update function: display voronoi diagram with random points
 def run():
     points = [(randint(box.left, box.right), randint(box.top, box.bottom)) for _ in range(N)]
@@ -54,6 +76,10 @@ def run():
     neighbors, polygons = make_polygons(points, box)
 
     screen.fill(white)
+
+    # naive approach
+    #bad_voronoi(points, 1)
+    # polygon approach
     display(points, neighbors, polygons)
 
 # main loop

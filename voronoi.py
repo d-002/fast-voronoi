@@ -328,6 +328,10 @@ def make_polygons(points, box):
         # sort the polygon points
         polygon = [point[0] for point in sorted(polygon, key=sort_p)]
 
+        if len(polygon) < 3:
+            # veeeeery rare but can happen (basically when like 1000 points align)
+            continue
+
         polygons.append(polygon)
 
     # might as well return both neighbors graph (undirected) and polygons
