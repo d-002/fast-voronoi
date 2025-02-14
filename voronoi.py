@@ -2,6 +2,13 @@ from math import sqrt, atan2, pi, tau
 
 smol = 1e-9
 
+class BoundingBox:
+    def __init__(self, l, t, w, h):
+        self.left = l
+        self.right = l+w
+        self.top = t
+        self.bottom = t+h
+
 def remove_collisions(points):
     """ugly, but needed in case some points are in the same place"""
 
