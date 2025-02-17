@@ -330,8 +330,7 @@ def make_polygons(points, box):
                 complete_polygon(A, points[j], polygon, points, box)
 
         # add bound points if accessible
-        for b_index, bound in enumerate(bounds):
-            b_index = -1-b_index
+        for bound in bounds:
             d = get_dist2(A, bound)
             accessible = True
 

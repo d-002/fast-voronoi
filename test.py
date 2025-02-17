@@ -128,4 +128,5 @@ def weight_demo():
         pygame.display.flip()
         clock.tick(60)
 
-weight_demo()
+perf_demo()
+#weight_demo()
