@@ -1,4 +1,5 @@
 from random import randint
+from math import sin
 
 import pygame
 from pygame.locals import *
@@ -6,7 +7,7 @@ from pygame.locals import *
 from voronoi import *
 
 # settings
-N = 30 # number of cells
+N = 3 # number of cells
 w, h = 1280, 720 # screen resolution
 margin = 100 # box margin
 box = Rect(margin, margin, w - margin*2, h - margin*2)
@@ -15,6 +16,7 @@ box = Rect(margin, margin, w - margin*2, h - margin*2)
 pygame.init()
 
 clock = pygame.time.Clock()
+ticks = pygame.time.get_ticks
 black, white, gray = (0,)*3, (255,)*3, (127,)*3
 
 screen = pygame.display.set_mode((w, h))
@@ -24,9 +26,9 @@ _r = lambda: randint(127, 255)
 def rand_col():
     return _r(), _r(), _r()
 
-def display(points, neighbors, polygons):
-    for polygon in polygons:
-        pygame.draw.polygon(screen, rand_col(), [p.to_tuple() for p in polygon])
+def display(points, points_cols, neighbors, polygons):
+    for i, polygon in enumerate(polygons):
+        pygame.draw.polygon(screen, points_cols[i], [p.to_tuple() for p in polygon])
 
     mul = 1
     for i, polygon in enumerate(polygons):
@@ -56,9 +58,9 @@ def bad_voronoi(points, step=2):
             min = None
             mind = 0
 
-            for i, pos in enumerate(points):
-                dx, dy = pos[0]-x, pos[1]-y
-                d = dx*dx + dy*dy
+            pixel = (x, y)
+            for i, point in enumerate(points):
+                d = get_dist2(point, pixel)
 
                 if d < mind or min is None:
                     min = i
@@ -68,11 +70,15 @@ def bad_voronoi(points, step=2):
 
     pygame.display.flip()
 
-# update function: display voronoi diagram with random points
-def run():
+def make_points():
     points = [Point(randint(box.left, box.right), randint(box.top, box.bottom)) for _ in range(N)]
     remove_collisions(points)
+    points_cols = [rand_col() for _ in range(len(points))]
 
+    return points, points_cols
+
+# update function: display voronoi diagram with random points
+def run(points, points_cols):
     neighbors, polygons = make_polygons(points, box)
 
     screen.fill(white)
@@ -80,10 +86,35 @@ def run():
     # naive approach
     #bad_voronoi(points, 1)
     # polygon approach
-    display(points, neighbors, polygons)
+    display(points, points_cols, neighbors, polygons)
 
-# main loop
-def main():
+# main loops
+def perf_demo():
+    """runs the selected approach multiple times, either on click or every frame"""
+
+    run(*make_points())
+
+    while 1:
+        for event in pygame.event.get():
+            if event.type == QUIT:
+                return
+            if event.type == KEYDOWN:
+                if event.key == K_ESCAPE:
+                    return
+                if event.key == K_SPACE:
+                    run(*make_points())
+
+        #run(*make_points())
+
+        pygame.display.flip()
+        clock.tick(10)
+
+def weight_demo():
+    """make the cells weights change a bit over time"""
+
+    points, points_cols = make_points()
+
+    t0 = ticks()
     while 1:
         for event in pygame.event.get():
             if event.type == QUIT:
@@ -91,10 +122,10 @@ def main():
             if event.type == KEYDOWN and event.key == K_ESCAPE:
                 return
 
-        # random demo multiple times
-        #clock.tick(10)
-        run()
+        # edit points weights
+        run(points, points_cols)
 
         pygame.display.flip()
+        clock.tick(60)
 
-main()
+weight_demo()

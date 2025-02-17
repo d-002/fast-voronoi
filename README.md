@@ -18,7 +18,7 @@ Very fast Voronoi diagram display
 - `Point(x, y, weight=1)`
     `v2`, but with an additional weight argument.
     Represents the center point of a cell.
-    Weight: controls the size of the cell around that point
+    Weight: controls the size of the cell around that point. larger values mean bigger cells.
 
 ## Important functions defined here (`voronoi.py`)
 

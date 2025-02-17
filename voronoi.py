@@ -11,8 +11,11 @@ class v2:
 
 class Point(v2):
     def __init__(self, x, y, weight=1):
+        """weight: controls the size of the cell around that point. Larger values mean bigger cells"""
+        assert weight
         super().__init__(x, y)
-        self.weight = 1
+
+        self.weight = weight
 
 class BoundingBox:
     def __init__(self, l, t, w, h):
@@ -41,10 +44,12 @@ def remove_collisions(points):
             return
 
 def get_dist2(A, B):
+    """A must be a Point, since it will determine the distance weight"""
+
     dx = B.x-A.x
     dy = B.y-A.y
 
-    return dx*dx + dy*dy
+    return (dx*dx + dy*dy) / A.weight
 
 def get_dot(A, B):
     return A.x*B.x + A.y*B.y
@@ -59,7 +64,9 @@ def get_closest_to_line(A, B, P, only_segment):
     return v2(A.x + dab.x*t, A.y + dab.y*t)
 
 def get_middle(A, B):
-    return v2((A.x+B.x) / 2, (A.y+B.y) / 2)
+    total_w = A.weight+B.weight
+    return Point((A.x*A.weight + B.x*B.weight) / total_w,
+                 (A.y*A.weight + B.y*B.weight) / total_w)
 
 def get_median(A, B):
     dx, dy = B.x-A.x, B.y-A.y
