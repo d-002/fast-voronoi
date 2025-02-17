@@ -235,7 +235,7 @@ def complete_polygon(A, B, polygon, points, box):
     mid, vec = get_median(A, B)
 
     # compute intersections
-    closest = None
+    inters = []
     mind = None
 
     for target, index in zip((box.left, box.right, box.top, box.bottom), (0, 0, 1, 1)):
@@ -263,18 +263,19 @@ def complete_polygon(A, B, polygon, points, box):
                 accessible = False
                 break
 
-        # keep only the closest point amongst those accessible
+        # keep all accessible intersections that don't go out of bounds
+        # there may be multiple intersections for lower cell counts
         if accessible:
-            d = get_dist2(mid, inter)
+            if index:
+                ok = box.left <= inter.x <= box.right
+            else:
+                ok = box.top <= inter.y <= box.bottom
 
-            if mind is None or d < mind:
-                mind = d
-                closest = inter
+            if ok:
+                inters.append(inter)
 
-    if closest is None:
-        return
-
-    insert_in_polygon(polygon, closest, atan2(closest.y-A.y, closest.x-A.x))
+    for inter in inters:
+        insert_in_polygon(polygon, inter, atan2(inter.y-A.y, inter.x-A.x))
 
 def make_polygons(points, box):
     polygons = []
