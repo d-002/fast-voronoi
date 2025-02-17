@@ -54,7 +54,7 @@ def get_dist2(A, B):
 def get_dot(A, B):
     return A.x*B.x + A.y*B.y
 
-def get_closest_to_line(A, B, P, only_segment):
+def get_closest_to_line(A, B, P):
     dab = v2(B.x-A.x, B.y-A.y)
     dap = v2(P.x-A.x, P.y-A.y)
 
@@ -197,7 +197,7 @@ def find_neighbors(points, box):
                 t = get_t(mid, vec, X)
 
                 # get which bound is being modified by looking at which side of (AB) P is
-                H = get_closest_to_line(mid, v2(mid.x+vec.x, mid.y+vec.y), P, False)
+                H = get_closest_to_line(mid, v2(mid.x+vec.x, mid.y+vec.y), P)
                 t_side = get_t(mid, vec, H)
 
                 if t_side < 0:

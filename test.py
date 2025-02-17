@@ -1,4 +1,4 @@
-from random import randint
+from random import random, randint
 from math import sin
 
 import pygame
@@ -113,8 +113,9 @@ def weight_demo():
     """make the cells weights change a bit over time"""
 
     points, points_cols = make_points()
+    target_weights = [random()+0.5 for _ in points]
 
-    t0 = ticks()
+    start = ticks()
     while 1:
         for event in pygame.event.get():
             if event.type == QUIT:
@@ -123,10 +124,17 @@ def weight_demo():
                 return
 
         # edit points weights
+        t = sin((ticks()-start) / 1000)
+        t = (t+1) / 2
+
+        for point, weight in zip(points, target_weights):
+            point.weight = 1 + (weight-1) * t
+
+        # refresh visuals
         run(points, points_cols)
 
         pygame.display.flip()
         clock.tick(60)
 
-perf_demo()
-#weight_demo()
+#perf_demo()
+weight_demo()
