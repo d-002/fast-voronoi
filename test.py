@@ -25,26 +25,26 @@ def rand_col():
     return _r(), _r(), _r()
 
 def display(points, neighbors, polygons):
-    for p in polygons:
-        pygame.draw.polygon(screen, rand_col(), p)
+    for polygon in polygons:
+        pygame.draw.polygon(screen, rand_col(), [p.to_tuple() for p in polygon])
 
     mul = 1
-    for i, p in enumerate(polygons):
-        x1, y1 = points[i]
-        _p = [None]*len(p)
+    for i, polygon in enumerate(polygons):
+        A = points[i]
+        _p = [None]*len(polygon)
 
-        for j in range(len(p)):
-            x2, y2 = p[j]
-            _p[j] = (x1 + (x2-x1)*mul, y1 + (y2-y1)*mul)
+        for j in range(len(polygon)):
+            B = polygon[j]
+            _p[j] = (A.x + (B.x-A.x)*mul, A.y + (B.y-A.y)*mul)
 
         pygame.draw.lines(screen, black, True, _p)
 
     for i in range(N):
         for j in neighbors[i]:
-            pygame.draw.line(screen, gray, points[i], points[j])
+            pygame.draw.line(screen, gray, points[i].to_tuple(), points[j].to_tuple())
 
-    for x, y in points:
-        pygame.draw.rect(screen, black, Rect(x-1, y-1, 3, 3))
+    for A in points:
+        pygame.draw.rect(screen, black, Rect(A.x-1, A.y-1, 3, 3))
 
 def bad_voronoi(points, step=2):
     # cache cells colors
@@ -70,7 +70,7 @@ def bad_voronoi(points, step=2):
 
 # update function: display voronoi diagram with random points
 def run():
-    points = [(randint(box.left, box.right), randint(box.top, box.bottom)) for _ in range(N)]
+    points = [Point(randint(box.left, box.right), randint(box.top, box.bottom)) for _ in range(N)]
     remove_collisions(points)
 
     neighbors, polygons = make_polygons(points, box)

@@ -2,6 +2,18 @@ from math import sqrt, atan2, pi, tau
 
 smol = 1e-9
 
+class v2:
+    def __init__(self, x, y):
+        self.x, self.y = x, y
+
+    def to_tuple(self):
+        return (self.x, self.y)
+
+class Point(v2):
+    def __init__(self, x, y, weight=1):
+        super().__init__(x, y)
+        self.weight = 1
+
 class BoundingBox:
     def __init__(self, l, t, w, h):
         self.left = l
@@ -22,50 +34,47 @@ def remove_collisions(points):
                     continue
 
                 if points[i] == points[j]:
-                    points[j] = (points[j][0]+1e-3, points[j][1])
+                    points[j].x += 1e-3
                     ok = False
 
         if ok:
             return
 
 def get_dist2(A, B):
-    dx = B[0]-A[0]
-    dy = B[1]-A[1]
+    dx = B.x-A.x
+    dy = B.y-A.y
 
     return dx*dx + dy*dy
 
 def get_dot(A, B):
-    return A[0]*B[0] + A[1]*B[1]
+    return A.x*B.x + A.y*B.y
 
 def get_closest_to_line(A, B, P, only_segment):
-    xa, ya = A
-    xb, yb = B
-    xp, yp = P
+    dab = v2(B.x-A.x, B.y-A.y)
+    dap = v2(P.x-A.x, P.y-A.y)
 
-    dab = (xb-xa, yb-ya)
-    dap = (xp-xa, yp-ya)
-
-    t = (dab[0]*dap[0] + dab[1]*dap[1]) / (dab[0]*dab[0] + dab[1]*dab[1])
+    t = (dab.x*dap.x + dab.y*dap.y) / (dab.x*dab.x + dab.y*dab.y)
     if (t < 0 or t > 1) and only_segment: return
 
-    return (xa + dab[0]*t, ya + dab[1]*t)
+    return v2(A.x + dab.x*t, A.y + dab.y*t)
 
 def get_middle(A, B):
-    return ((A[0]+B[0]) / 2, (A[1]+B[1]) / 2)
+    return v2((A.x+B.x) / 2, (A.y+B.y) / 2)
 
 def get_median(A, B):
-    dx, dy = B[0]-A[0], B[1]-A[1]
+    dx, dy = B.x-A.x, B.y-A.y
 
     mid = get_middle(A, B)
     dab = sqrt(dx*dx + dy*dy)
-    u = ((B[1]-A[1]) / dab, (A[0]-B[0]) / dab)
+    u = v2((B.y-A.y) / dab, (A.x-B.x) / dab)
 
     return mid, u
 
 def get_t(M, u, P):
-    i = 1 if abs(u[0]) < abs(u[1]) else 0
+    if abs(u.x) < abs(u.y):
+        return (P.y-M.y) / u.y
 
-    return (P[i]-M[i]) / u[i]
+    return (P.x-M.x) / u.x
 
 def get_equidistant(A, B, C):
     """
@@ -79,19 +88,24 @@ def get_equidistant(A, B, C):
     N, v = get_median(A, C)
 
     # handle when A, B and C are aligned
-    if abs(u[0]*v[1] - u[1]*v[0]) < smol:
+    if abs(u.x*v.y - u.y*v.x) < smol:
         return None
 
     # handle divisions by zero with multiple definitions of t
-    i0 = 0 if abs(v[0]) < abs(v[1]) else 1
-    i1 = 1-i0
-    mv = v[i0]/v[i1]
-    div = u[i0] - mv*u[i1]
+    if abs(v.x) < abs(v.y):
+        mv = v.x/v.y
+        div = u.x - mv*u.y
 
-    # div shouldn't be zero, we checked that above with colinear vectors check
-    t = (N[i0] - M[i0] + mv * (M[i1]-N[i1])) / div
+        # div shouldn't be zero, we checked that above with colinear vectors check
+        t = (N.x - M.x + mv * (M.y-N.y)) / div
 
-    return (M[0] + u[0]*t, M[1] + u[1]*t)
+    else:
+        mv = v.y/v.x
+        div = u.y - mv*u.x
+
+        t = (N.y - M.y + mv * (M.x-N.x)) / div
+
+    return v2(M.x + u.x*t, M.y + u.y*t)
 
 def find_neighbors(points, box):
     """using this method:
@@ -119,20 +133,20 @@ def find_neighbors(points, box):
             # define the bounds according to the allowed space
             bounds = [None]*4
 
-            if vec[0]:
+            if vec.x:
                 # left
-                bounds[0] = (box.left-mid[0]) / vec[0]
+                bounds[0] = (box.left-mid.x) / vec.x
                 # right
-                bounds[1] = (box.right-mid[0]) / vec[0]
+                bounds[1] = (box.right-mid.x) / vec.x
 
-            if vec[1]:
+            if vec.y:
                 # top
-                bounds[2] = (box.top-mid[1]) / vec[1]
+                bounds[2] = (box.top-mid.y) / vec.y
                 # bottom
-                bounds[3] = (box.bottom-mid[1]) / vec[1]
+                bounds[3] = (box.bottom-mid.y) / vec.y
 
-            if vec[0]:
-                if vec[1]:
+            if vec.x:
+                if vec.y:
                     bounds.sort()
 
                     tmin = max(bounds[0], bounds[1])
@@ -164,7 +178,7 @@ def find_neighbors(points, box):
                     # in this case, either P doesn't affect anything, or it blocks the entire thing
                     # depending on the ordering of the points
 
-                    if get_dot((P[0]-A[0], P[1]-A[1]), (P[0]-B[0], P[1]-B[1])) < 0:
+                    if get_dot(v2(P.x-A.x, P.y-A.y), v2(P.x-B.x, P.y-B.y)) < 0:
                         # P is between A and B
                         tmin = 1
                         tmax = 0
@@ -176,7 +190,7 @@ def find_neighbors(points, box):
                 t = get_t(mid, vec, X)
 
                 # get which bound is being modified by looking at which side of (AB) P is
-                H = get_closest_to_line(mid, (mid[0]+vec[0], mid[1]+vec[1]), P, False)
+                H = get_closest_to_line(mid, v2(mid.x+vec.x, mid.y+vec.y), P, False)
                 t_side = get_t(mid, vec, H)
 
                 if t_side < 0:
@@ -218,15 +232,16 @@ def complete_polygon(A, B, polygon, points, box):
     mind = None
 
     for target, index in zip((box.left, box.right, box.top, box.bottom), (0, 0, 1, 1)):
-        div = vec[index]
+        div = vec.y if index else vec.x
         # no intersection here (vertical/horizontal neighbor line)
         if not div:
             continue
 
-        t = (target-mid[index]) / div
+        m = mid.y if index else mid.x
+        t = (target-m) / div
 
         # found the intersection point
-        inter = (mid[0] + vec[0]*t, mid[1] + vec[1]*t)
+        inter = v2(mid.x + vec.x*t, mid.y + vec.y*t)
 
         # check if this point is actually part of the current cell
         # warning: since the point is on the edge of another cell, need to ignore it as well
@@ -252,7 +267,7 @@ def complete_polygon(A, B, polygon, points, box):
     if closest is None:
         return
 
-    insert_in_polygon(polygon, closest, atan2(closest[1]-A[1], closest[0]-A[0]))
+    insert_in_polygon(polygon, closest, atan2(closest.y-A.y, closest.x-A.x))
 
 def make_polygons(points, box):
     polygons = []
@@ -265,18 +280,18 @@ def make_polygons(points, box):
 
     # get bound points
     bounds = [
-        (box.left, box.top),
-        (box.right, box.top),
-        (box.left, box.bottom),
-        (box.right, box.bottom)
+        v2(box.left, box.top),
+        v2(box.right, box.top),
+        v2(box.left, box.bottom),
+        v2(box.right, box.bottom)
     ]
 
     for i in range(N):
         n = neighbors[i]
-        x, y = A = points[i]
+        A = points[i]
 
         # cache angle differences
-        cache = {j: atan2(points[j][1]-y, points[j][0]-x) for j in n}
+        cache = {j: atan2(points[j].y-A.y, points[j].x-A.x) for j in n}
 
         n = sorted(n, key=sort_n)
 
@@ -294,7 +309,7 @@ def make_polygons(points, box):
             # no issues, add point to the polygon
             else:
                 X = get_equidistant(A, B, C)
-                polygon.append((X, atan2(X[1]-y, X[0]-x)))
+                polygon.append((X, atan2(X.y-A.y, X.x-A.x)))
 
         # fix partially enclosed polygons by adding bound intersections
 
@@ -323,7 +338,7 @@ def make_polygons(points, box):
 
             # insert the point at the right index
             if accessible:
-                insert_in_polygon(polygon, bound, atan2(bound[1]-y, bound[0]-x))
+                insert_in_polygon(polygon, bound, atan2(bound.y-A.y, bound.x-A.x))
 
         # sort the polygon points
         polygon = [point[0] for point in sorted(polygon, key=sort_p)]

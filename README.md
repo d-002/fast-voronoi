@@ -6,6 +6,20 @@ Very fast Voronoi diagram display
 - `voronoi.py` Import this file to access main features
 - `test.py` Test file, requires pygame (`pip install pygame`)
 
+## Classes defined here (`voronoi.py`)
+
+- `BoundingBox(l, t, w, h)`
+    Similar syntax to [`pygame.Rect`](https://www.pygame.org/docs/ref/rect.html)
+    Arguments: `l`: left bound, `t`: top bound, `w`: bound width, `h`: bound height
+
+- `v2(x, y)`
+    2D vector
+
+- `Point(x, y, weight=1)`
+    `v2`, but with an additional weight argument.
+    Represents the center point of a cell.
+    Weight: controls the size of the cell around that point
+
 ## Important functions defined here (`voronoi.py`)
 
 - `remove_collisions(points)`
