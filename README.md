@@ -56,7 +56,7 @@ These times are in seconds, an average of 3, run on my computer, only here for y
 I'm giving 4 non-zero digits no matter the time it takes, so we can easily see which times are smaller.  
 The times for the current approach also include any eventual collision removal time, although I think this is too rare to have any impact and is just extra flex.
 
-> [!important] These might be outdated
+> [!warning] These might be outdated
 > Check the commit at which these were made (before adding POO and weights)
 > I might add a release for this version as it is faster and you may not want the weights feature
 

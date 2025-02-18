@@ -47,12 +47,10 @@ def remove_collisions(points):
             return
 
 def get_dist2(A, B):
-    """A must be a Point, since it will determine the distance weight"""
-
     dx = B.x-A.x
     dy = B.y-A.y
 
-    return (dx*dx + dy*dy) / A.weight
+    return dx*dx + dy*dy
 
 def get_dot(A, B):
     return A.x*B.x + A.y*B.y
@@ -67,10 +65,7 @@ def get_closest_to_line(A, vec, P):
     return v2(A.x + vec.x*t, A.y + vec.y*t)
 
 def get_middle(A, B):
-    #return Point((A.x+B.x)/2, (A.y+B.y)/2)
-    total_w = A.weight+B.weight
-    return Point((A.x*B.weight + B.x*A.weight) / total_w,
-                 (A.y*B.weight + B.y*A.weight) / total_w)
+    return Point((A.x+B.x) / 2, (A.y+B.y) / 2)
 
 def get_median(A, B):
     dx, dy = B.x-A.x, B.y-A.y
@@ -87,9 +82,8 @@ def get_t(M, u, P):
 
     return (P.x-M.x) / u.x
 
-def _get_equidistant(A, B, C):
+def get_equidistant(A, B, C):
     """
-    A, B and C must be of class Point
     Let M be the middle point between A and B, and N between A and C
     Let X be the point equidistant to A, B and C.
     X is the intersection between (AB) and (AC)
@@ -118,26 +112,6 @@ def _get_equidistant(A, B, C):
         t = (N.y - M.y + mv * (M.x-N.x)) / div
 
     return v2(M.x + u.x*t, M.y + u.y*t)
-
-def get_equidistant(A, B, C):
-    """wrapper function around _get_equidistant to handle weights
-    In case all three points weights are the same, there is one equidistant point
-    Otherwise, (may be temporary), the equidistant point is approximated
-    using the calculated points from all perspectives,
-    which may be different, and averaged together"""
-
-    inter1 = _get_equidistant(A, B, C)
-    if A.weight == B.weight == C.weight:
-        return inter1
-
-    if inter1 is None:
-        return None
-
-    inter2 = _get_equidistant(B, C, A)
-    inter3 = _get_equidistant(C, A, B)
-
-    return v2((inter1.x+inter2.x+inter3.x) / 3,
-              (inter1.y+inter2.y+inter3.y) / 3)
 
 def find_neighbors(points, box):
     """using this method:
@@ -238,6 +212,9 @@ def find_neighbors(points, box):
                 neighbors[j].add(i)
 
     return neighbors
+
+def gradient_move(X, A, B, C):
+    """Move a point equidistant from 3 points depending on their weights
 
 def insert_in_polygon(polygon, point, angle):
     j = 0
@@ -342,6 +319,7 @@ def make_polygons(points, box):
             # no issues, add point to the polygon
             else:
                 X = get_equidistant(A, B, C)
+                X = gradient_move(X, A, B, C)
                 polygon.append((X, atan2(X.y-A.y, X.x-A.x)))
 
         # fix partially enclosed polygons by adding bound intersections

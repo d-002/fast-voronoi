@@ -124,8 +124,7 @@ def weight_demo():
     def init():
         nonlocal points, points_cols, target_weights
         points, points_cols = make_points()
-        #target_weights = [random()+0.5 for _ in range(N)]
-        target_weights = [5 - i%2*4 for i in range(N)]
+        target_weights = [1 + random()*5 for _ in range(N)]
 
     init()
 
@@ -143,7 +142,6 @@ def weight_demo():
         # edit points weights
         t = sin((ticks()-start) / 1000)
         t = (t+1) / 2
-        t = 1
 
         for point, weight in zip(points, target_weights):
             point.weight = 1 + (weight-1) * t
