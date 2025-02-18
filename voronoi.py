@@ -66,8 +66,8 @@ def get_closest_to_line(A, vec, P):
 def get_middle(A, B):
     #return Point((A.x+B.x)/2, (A.y+B.y)/2)
     total_w = A.weight+B.weight
-    return Point((A.x*A.weight + B.x*B.weight) / total_w,
-                 (A.y*A.weight + B.y*B.weight) / total_w)
+    return Point((A.x*B.weight + B.x*A.weight) / total_w,
+                 (A.y*B.weight + B.y*A.weight) / total_w)
 
 def get_median(A, B):
     dx, dy = B.x-A.x, B.y-A.y

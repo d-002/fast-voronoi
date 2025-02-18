@@ -7,7 +7,7 @@ from pygame.locals import *
 from voronoi import *
 
 # settings
-N = 30 # number of cells
+N = 5 # number of cells
 w, h = 1280, 720 # screen resolution
 margin = 100 # box margin
 box = Rect(margin, margin, w - margin*2, h - margin*2)
@@ -72,6 +72,13 @@ def bad_voronoi(points, step=2):
 
 def make_points():
     points = [Point(randint(box.left, box.right), randint(box.top, box.bottom)) for _ in range(N)]
+    points = [
+        Point(200, 200),
+        Point(200, 520),
+        Point(640, 360),
+        Point(1080, 200),
+        Point(1080, 520)
+    ]
     remove_collisions(points)
     points_cols = [rand_col() for _ in range(len(points))]
 
@@ -79,14 +86,14 @@ def make_points():
 
 # update function: display voronoi diagram with random points
 def run(points, points_cols):
-    neighbors, polygons = make_polygons(points, box)
-
     screen.fill(white)
 
     # naive approach
-    bad_voronoi(points, 1)
+    #bad_voronoi(points, 1)
+
     # polygon approach
-    #display(points, points_cols, neighbors, polygons)
+    neighbors, polygons = make_polygons(points, box)
+    display(points, points_cols, neighbors, polygons)
 
 # main loops
 def perf_demo():
@@ -117,8 +124,8 @@ def weight_demo():
     def init():
         nonlocal points, points_cols, target_weights
         points, points_cols = make_points()
-        #target_weights = [random()+0.5 for _ in points]
-        target_weights = [1 + i%2 for i in range(len(points))]
+        #target_weights = [random()+0.5 for _ in range(N)]
+        target_weights = [5 - i%2*4 for i in range(N)]
 
     init()
 
@@ -136,6 +143,7 @@ def weight_demo():
         # edit points weights
         t = sin((ticks()-start) / 1000)
         t = (t+1) / 2
+        t = 1
 
         for point, weight in zip(points, target_weights):
             point.weight = 1 + (weight-1) * t
