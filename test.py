@@ -89,8 +89,7 @@ def run(points, points_cols):
     screen.fill(white)
 
     # naive approach
-    bad_voronoi(points, box, 1)
-    return
+    #bad_voronoi(points, box, 1)
 
     # polygon approach
     neighbors, polygons = make_polygons(points, box)

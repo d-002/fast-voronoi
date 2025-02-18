@@ -9,6 +9,9 @@ class v2:
     def to_tuple(self):
         return (self.x, self.y)
 
+    def __repr__(self):
+        return 'v2(%.3f, %.3f)' %(self.x, self.y)
+
 class Point(v2):
     def __init__(self, x, y, weight=1):
         """weight: controls the size of the cell around that point. Larger values mean bigger cells"""
@@ -84,8 +87,9 @@ def get_t(M, u, P):
 
     return (P.x-M.x) / u.x
 
-def get_equidistant(A, B, C):
+def _get_equidistant(A, B, C):
     """
+    A, B and C must be of class Point
     Let M be the middle point between A and B, and N between A and C
     Let X be the point equidistant to A, B and C.
     X is the intersection between (AB) and (AC)
@@ -114,6 +118,26 @@ def get_equidistant(A, B, C):
         t = (N.y - M.y + mv * (M.x-N.x)) / div
 
     return v2(M.x + u.x*t, M.y + u.y*t)
+
+def get_equidistant(A, B, C):
+    """wrapper function around _get_equidistant to handle weights
+    In case all three points weights are the same, there is one equidistant point
+    Otherwise, (may be temporary), the equidistant point is approximated
+    using the calculated points from all perspectives,
+    which may be different, and averaged together"""
+
+    inter1 = _get_equidistant(A, B, C)
+    if A.weight == B.weight == C.weight:
+        return inter1
+
+    if inter1 is None:
+        return None
+
+    inter2 = _get_equidistant(B, C, A)
+    inter3 = _get_equidistant(C, A, B)
+
+    return v2((inter1.x+inter2.x+inter3.x) / 3,
+              (inter1.y+inter2.y+inter3.y) / 3)
 
 def find_neighbors(points, box):
     """using this method:
