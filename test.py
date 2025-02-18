@@ -48,13 +48,13 @@ def display(points, points_cols, neighbors, polygons):
     for A in points:
         pygame.draw.rect(screen, black, Rect(A.x-1, A.y-1, 3, 3))
 
-def bad_voronoi(points, step=2):
+def bad_voronoi(points, box, step=2):
     # cache cells colors
     colors = [rand_col() for _ in range(len(points))]
 
     # draw cells
-    for x in range(0, w, step):
-        for y in range(0, h, step):
+    for x in range(box.left, box.right, step):
+        for y in range(box.top, box.bottom, step):
             min = None
             mind = 0
 
@@ -89,7 +89,8 @@ def run(points, points_cols):
     screen.fill(white)
 
     # naive approach
-    #bad_voronoi(points, 1)
+    bad_voronoi(points, box, 1)
+    return
 
     # polygon approach
     neighbors, polygons = make_polygons(points, box)
