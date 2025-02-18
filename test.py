@@ -7,7 +7,7 @@ from pygame.locals import *
 from voronoi import *
 
 # settings
-N = 3 # number of cells
+N = 30 # number of cells
 w, h = 1280, 720 # screen resolution
 margin = 100 # box margin
 box = Rect(margin, margin, w - margin*2, h - margin*2)
@@ -58,7 +58,7 @@ def bad_voronoi(points, step=2):
             min = None
             mind = 0
 
-            pixel = (x, y)
+            pixel = v2(x, y)
             for i, point in enumerate(points):
                 d = get_dist2(point, pixel)
 
@@ -84,9 +84,9 @@ def run(points, points_cols):
     screen.fill(white)
 
     # naive approach
-    #bad_voronoi(points, 1)
+    bad_voronoi(points, 1)
     # polygon approach
-    display(points, points_cols, neighbors, polygons)
+    #display(points, points_cols, neighbors, polygons)
 
 # main loops
 def perf_demo():
@@ -112,16 +112,26 @@ def perf_demo():
 def weight_demo():
     """make the cells weights change a bit over time"""
 
-    points, points_cols = make_points()
-    target_weights = [random()+0.5 for _ in points]
+    # I don't care how ugly this is
+    points = points_cols = target_weights = None
+    def init():
+        nonlocal points, points_cols, target_weights
+        points, points_cols = make_points()
+        #target_weights = [random()+0.5 for _ in points]
+        target_weights = [1 + i%2 for i in range(len(points))]
+
+    init()
 
     start = ticks()
     while 1:
         for event in pygame.event.get():
             if event.type == QUIT:
                 return
-            if event.type == KEYDOWN and event.key == K_ESCAPE:
-                return
+            if event.type == KEYDOWN:
+                if event.key == K_ESCAPE:
+                    return
+                if event.key == K_SPACE:
+                    init()
 
         # edit points weights
         t = sin((ticks()-start) / 1000)
