@@ -181,6 +181,7 @@ def find_neighbors(points, box):
 
                 if X is None:
                     # edge case where A, B and P are aligned
+                    # or the weights and the points distance make an intersection point impossible
                     # in this case, either P doesn't affect anything, or it blocks the entire thing
                     # depending on the ordering of the points
 
@@ -214,7 +215,7 @@ def find_neighbors(points, box):
     return neighbors
 
 def gradient_move(X, A, B, C):
-    """Move a point equidistant from 3 points depending on their weights
+    """Move a point equidistant from 3 points depending on their weights"""
 
 def insert_in_polygon(polygon, point, angle):
     j = 0

@@ -1,5 +1,5 @@
 # fast-voronoi
-Very fast Voronoi diagram display
+Very fast (multiplicatively weighted) Voronoi diagram display
 
 ## Files defined here
 
