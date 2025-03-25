@@ -19,6 +19,9 @@ class Point:
             Point.RADIUS*2 + 1,
             Point.RADIUS*2 + 1)
 
+        # point movement
+        self.delta_move = None
+
     def update(self, events, surf):
         """returns True if selected the point, False otherwise
         to avoid selecting multiple points at the same time"""
@@ -27,15 +30,29 @@ class Point:
         res = False
         for event in events:
             if event.type == MOUSEBUTTONDOWN and event.button == 1:
-                pass
+                if self.rect.collidepoint(event.pos):
+                    self.prev_pos = tuple(self.pos)
+                    self.delta_move = (event.pos[0]-self.pos[0],
+                                   event.pos[1]-self.pos[1])
+                    res = True
+
             elif event.type == MOUSEBUTTONUP and event.button == 1:
-                pass
+                self.delta_move = None
+
+        if self.delta_move is not None and pygame.mouse.get_pressed()[0]:
+            mx, my = pygame.mouse.get_pos()
+            self.pos = (
+                mx - self.delta_move[0],
+                my - self.delta_move[1]
+            )
+            self.rect.x = self.pos[0]-Point.RADIUS
+            self.rect.y = self.pos[1]-Point.RADIUS
 
         # render to screen
         # point
         pygame.draw.circle(surf, self.color, self.pos, Point.RADIUS)
 
         # label
-        surf.blit(self.label, (self.rect.right+2, self.pos[1] - self.label.get_height()/2))
+        surf.blit(self.label, (self.rect.right+5, self.pos[1] - self.label.get_height()/2))
 
         return res
