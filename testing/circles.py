@@ -68,14 +68,17 @@ while run:
     for p in points:
         selected |= p.update([] if selected else events, screen)
 
-    ab = get_circle(points[0].pos, points[1].pos,
-                    sliders[0].get(), sliders[1].get())
-    ac = get_circle(points[0].pos, points[2].pos,
-                    sliders[0].get(), sliders[2].get())
+    try:
+        ab = get_circle(points[0].pos, points[1].pos,
+                        sliders[0].get(), sliders[1].get())
+        ac = get_circle(points[0].pos, points[2].pos,
+                        sliders[0].get(), sliders[2].get())
 
-    inter = get_inter(ab, ac)
-    for pos in inter:
-        pygame.draw.circle(screen, (255, 0, 0), pos, 6)
+        inter = get_inter(ab, ac)
+        for pos in inter:
+            pygame.draw.circle(screen, (255, 0, 0), pos, 6)
+    except ZeroDivisionError:
+        screen.blit(font.render('zero div', True, (255, 0, 0)), (0, 0))
 
     pygame.display.flip()
     clock.tick(60)
