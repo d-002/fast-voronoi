@@ -19,7 +19,7 @@ class Slider:
         else:
             self.t = min(max((initial-_min) / (_max-_min), 0), 1)
 
-    def get_value(self):
+    def get(self):
         return self.min + (self.max-self.min)*self.t
 
     def update(self, events, surf):
@@ -44,7 +44,8 @@ class Slider:
         pygame.draw.circle(surf, Slider.HANDLE_COL, (x, y), 6)
 
         # label
-        label = self.font.render("%s = %.3f" %(self.label, self.get_value()),
-                            True,
-                            Slider.HANDLE_COL)
+        label = self.font.render(
+            "%s = %.3f" %(self.label, self.get()),
+            True,
+            Slider.HANDLE_COL)
         surf.blit(label, (self.rect.right+10, self.rect.top + (self.rect.height-label.get_height())/2))
