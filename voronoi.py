@@ -115,10 +115,11 @@ def get_equidistant(A, B, C):
 
 def find_neighbors(points, box):
     """using this method:
-    two cells are neighbors if they share a side.
-    meaning there has to be at least one point that is equally close to them, the two being the closest cells to this point
-    obviously there will be floating-point errors, meaning a threshold will have to be used
-    or not? build a segment of the line where no other cells are closer
+    two cells are neighbors if they share a side. start with a long line (bound
+    using the size of the provided boundig box) then, trim this segment by
+    computing where, along that line, the points start getting closer to
+    another cell (meaning they are inside another cell, and not part of the
+    edge between the two current cells
     """
 
     N = len(points)

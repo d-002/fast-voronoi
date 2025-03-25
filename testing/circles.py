@@ -11,17 +11,14 @@ screen = pygame.display.set_mode((640, 480))
 clock = pygame.time.Clock()
 font = pygame.font.SysFont('consolas', 16)
 
-sliders = [
-    Slider(Rect(20, 20, 100, 30), .1, 5, 'a', font, 1),
-    Slider(Rect(20, 50, 100, 30), .1, 5, 'b', font, 2),
-    Slider(Rect(20, 80, 100, 30), .1, 5, 'c', font, .5)
-]
+sliders = []
+points = []
 
-points = [
-    Point((100, 400), 'A', font),
-    Point((300, 50), 'B', font),
-    Point((500, 150), 'C', font)
-]
+weights = [1, 2, .5, .8]
+pos = [(100, 400), (300, 50), (500, 150), (250, 100)]
+for i in range(4):
+    sliders.append(Slider(Rect(20, 20 + 30*i, 100, 30), .1, 5, chr(97+i), font, weights[i]))
+    points.append(Point(pos[i], chr(65+i), font))
 
 def get_circle(A, B, wa, wb):
     xa, ya = A
@@ -102,17 +99,24 @@ while run:
         selected |= p.update([] if selected else events, screen)
 
     try:
-        ab = get_circle(points[0].pos, points[1].pos,
-                        sliders[0].get(), sliders[1].get())
-        ac = get_circle(points[0].pos, points[2].pos,
-                        sliders[0].get(), sliders[2].get())
+        for i in range(len(points)):
+            for j in range(len(points)):
+                if j == i: continue
 
-        pygame.draw.circle(screen, (255, 0, 0), ab[0], sqrt(ab[1]), width=1)
-        pygame.draw.circle(screen, (255, 0, 0), ac[0], sqrt(ac[1]), width=1)
+                for k in range(len(points)):
+                    if k == i or k == j: continue
 
-        inter = get_inter(ab, ac)
-        for pos in inter:
-            pygame.draw.circle(screen, (0, 255, 0), pos, 6)
+                    ab = get_circle(points[i].pos, points[j].pos,
+                                    sliders[i].get(), sliders[j].get())
+                    ac = get_circle(points[i].pos, points[k].pos,
+                                    sliders[i].get(), sliders[k].get())
+
+                    pygame.draw.circle(screen, (255, 0, 0), ab[0], sqrt(ab[1]), width=1)
+                    pygame.draw.circle(screen, (255, 0, 0), ac[0], sqrt(ac[1]), width=1)
+
+                    inter = get_inter(ab, ac)
+                    for pos in inter:
+                        pygame.draw.circle(screen, (0, 255, 0), pos, 7)
     except ZeroDivisionError:
         screen.blit(font.render('zero div', True, (255, 0, 0)), (0, 0))
 

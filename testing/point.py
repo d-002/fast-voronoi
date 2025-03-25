@@ -3,7 +3,7 @@ from pygame.locals import *
 
 class Point:
     BASE_COLOR = (0, 0, 0)
-    RADIUS = 6
+    RADIUS = 7
 
     def __init__(self, pos, label, font, color=None):
         self.pos = pos
