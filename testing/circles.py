@@ -1,5 +1,6 @@
 import pygame
 from pygame.locals import *
+from math import sqrt
 
 from slider import *
 from point import *
@@ -51,7 +52,39 @@ def get_circle(A, B, wa, wb):
     return pos, r2
 
 def get_inter(ca, cb):
-    return []
+    # warning: the radii are already squared
+    a1, b1 = ca[0]
+    r1, r2 = ca[1], cb[1]
+    a2, b2 = cb[0]
+
+    # solve quadratic equation for y
+    da, db = a2-a1, b1-b2
+    I = r1 - r2 + a2*a2 - a1*a1 + b2*b2 - b1*b1
+    a = db*db / (da*da) + 1
+    b = db*I / (da*da) - 2*a1*db/da - 2*b1
+    c = I*I / (4*da*da) - a1*I/da + a1*a1 + b1*b1 - r1
+
+    delta = b*b - 4*a*c
+    if delta < 0:
+        solutions = []
+    elif delta:
+        d = sqrt(delta)
+
+        solutions = [
+            (-b-d) / (2*a),
+            (-b+d) / (2*a)
+        ]
+    else:
+        solutions = [-b/(2*a)]
+
+    for i in range(len(solutions)):
+        y = solutions[i]
+
+        x = (2*db*y + I) / (2*da)
+
+        solutions[i] = (x, y)
+
+    return solutions
 
 run = True
 while run:
@@ -74,9 +107,12 @@ while run:
         ac = get_circle(points[0].pos, points[2].pos,
                         sliders[0].get(), sliders[2].get())
 
+        pygame.draw.circle(screen, (255, 0, 0), ab[0], sqrt(ab[1]), width=1)
+        pygame.draw.circle(screen, (255, 0, 0), ac[0], sqrt(ac[1]), width=1)
+
         inter = get_inter(ab, ac)
         for pos in inter:
-            pygame.draw.circle(screen, (255, 0, 0), pos, 6)
+            pygame.draw.circle(screen, (0, 255, 0), pos, 6)
     except ZeroDivisionError:
         screen.blit(font.render('zero div', True, (255, 0, 0)), (0, 0))
 
