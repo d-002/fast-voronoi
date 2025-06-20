@@ -20,13 +20,6 @@ class Point(v2):
 
         self.weight = weight
 
-class BoundingBox:
-    def __init__(self, l, t, w, h):
-        self.left = l
-        self.right = l+w
-        self.top = t
-        self.bottom = t+h
-
 def remove_collisions(points):
     """ugly, but needed in case some points are in the same place"""
 

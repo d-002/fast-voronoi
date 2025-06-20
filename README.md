@@ -11,6 +11,7 @@ Very fast (multiplicatively weighted) Voronoi diagram display
 - `BoundingBox(l, t, w, h)`
     Similar syntax to [`pygame.Rect`](https://www.pygame.org/docs/ref/rect.html)
     Arguments: `l`: left bound, `t`: top bound, `w`: bound width, `h`: bound height
+todo: to check
 
 - `v2(x, y)`
     2D vector
@@ -81,4 +82,4 @@ The times for the current approach also include any eventual collision removal t
 |Current approach|1.4189|**1.5077**|**1.5340**|**1.5137**|
 
 The faster values are **bold** for each test.
-As you can see, the naive approach takes a lot more time when the screen size increases, while the current approach doesn't care and just increases rapidly when the number of cells increase.
+As you can see, the naive approach takes a lot more time when the screen size increases, while the current approach doesn't care and just increases rapidly when the number of cells increases.
