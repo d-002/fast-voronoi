@@ -14,8 +14,10 @@ class v2:
 
 class Point(v2):
     def __init__(self, x, y, weight=1):
-        """weight: controls the size of the cell around that point.
-        Larger values mean bigger cells."""
+        """
+        weight: controls the size of the cell around that point.
+        Larger values mean bigger cells.
+        """
         assert weight
         super().__init__(x, y)
 
@@ -31,8 +33,10 @@ def get_dot(A, B):
     return A.x*B.x + A.y*B.y
 
 def get_closest_to_line(A, vec, P):
-    """return the closest point to P that is inside the line directed by vec
-    and that passes through A"""
+    """
+    returns the closest point to P that is inside the line directed by vec
+    and that passes through A
+    """
 
     dap = v2(P.x-A.x, P.y-A.y)
 
@@ -53,6 +57,11 @@ def get_median(A, B):
     return mid, u
 
 def get_t(M, u, P):
+    """
+    returns how far along the line directed by u and that passes through M,
+    P is. The "origin" (t = 0) is at M, and t = 1 is at M+u.
+    """
+
     if abs(u.x) < abs(u.y):
         return (P.y-M.y) / u.y
 
@@ -60,9 +69,10 @@ def get_t(M, u, P):
 
 def get_equidistant(A, B, C):
     """
-    Let M be the middle point between A and B, and N between A and C
+    Let (a) be the median (origin, directing vector) between A and B, and (b)
+    the median between A and C
     Let X be the point equidistant to A, B and C.
-    X is the intersection between (AB) and (AC)
+    X is the intersection between (a) and (b)
     return None if the two lines are parallel, X otherwise
     """
 
@@ -91,12 +101,15 @@ def get_equidistant(A, B, C):
     return v2(M.x + u.x*t, M.y + u.y*t)
 
 def find_neighbors(points, box):
-    """using this method:
-    two cells are neighbors if they share a side. start with a long line (bound
-    using the size of the provided boundig box) then, trim this segment by
+    """
+    Using this method:
+    Two cells are neighbors if they share a side. start with a long line (bound
+    using the size of the provided bounding box), then trim this segment by
     computing where, along that line, the points start getting closer to another
     cell (meaning they are inside another cell, and not part of the edge between
-          the two current cells
+    the two current cells).
+    This process will gradually trim the intersection line until it either
+    represents an existing line (meaning the two cells are neighbors) or not.
     """
 
     N = len(points)
@@ -195,9 +208,6 @@ def find_neighbors(points, box):
 
     return neighbors
 
-def gradient_move(X, A, B, C):
-    """Move a point equidistant from 3 points depending on their weights"""
-
 def insert_in_polygon(polygon, point, angle):
     j = 0
     for j in range(len(polygon)):
@@ -207,13 +217,16 @@ def insert_in_polygon(polygon, point, angle):
     polygon.insert(j, (point, angle))
 
 def complete_polygon(A, B, polygon, points, box):
-    """Using this method:
-    For each neighbor B, find the ray that originates from the middle point
-    between A and B and goes along the neighbor line.
-    Then, calculate the intersection points with all four bounds, discarding
-    them when they are not part of the current cell.
-    Among the remaining ones, the closest intersection to the start of the ray
-    is where a point should be added.
+    """
+    Completes a polygon for a non-weighted cell with intersections with the
+    bounding box.
+    Using this method:
+    For a given neighbor B, find the intersection line (get_median) with the
+    current cell (A).
+    Then, calculate the intersection points with this line and all four box
+    bounds, discarding these points when they are outside the current cell
+    (meaning this cell does not reach the given bound, hence there should not be
+    an intersection point here).
     """
 
     N = len(points)

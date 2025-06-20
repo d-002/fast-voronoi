@@ -73,7 +73,9 @@ def bad_voronoi(points, box, step=2):
     pygame.display.flip()
 
 def remove_collisions(points):
-    """ugly, but needed in case some points are in the same place"""
+    """
+    ugly, but needed in case some points are in the same place
+    """
 
     N = len(points)
     while True:
@@ -119,8 +121,9 @@ def run(points, points_cols):
 
 # main loops
 def perf_demo():
-    """runs the selected approach multiple times,
-    either on click or every frame"""
+    """
+    runs the selected approach multiple times, either on click or every frame
+    """
 
     run(*make_points())
 
@@ -140,7 +143,9 @@ def perf_demo():
         clock.tick(10)
 
 def weight_demo():
-    """make the cells weights change a bit over time"""
+    """
+    make the cells' weights change a bit over time
+    """
 
     # I don't care how ugly this is
     points = points_cols = target_weights = None
