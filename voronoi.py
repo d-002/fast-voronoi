@@ -14,30 +14,12 @@ class v2:
 
 class Point(v2):
     def __init__(self, x, y, weight=1):
-        """weight: controls the size of the cell around that point. Larger values mean bigger cells"""
+        """weight: controls the size of the cell around that point.
+        Larger values mean bigger cells."""
         assert weight
         super().__init__(x, y)
 
         self.weight = weight
-
-def remove_collisions(points):
-    """ugly, but needed in case some points are in the same place"""
-
-    N = len(points)
-    while True:
-        ok = True
-
-        for i in range(N):
-            for j in range(N):
-                if i == j:
-                    continue
-
-                if points[i] == points[j]:
-                    points[j].x += 1e-3
-                    ok = False
-
-        if ok:
-            return
 
 def get_dist2(A, B):
     dx = B.x-A.x
@@ -49,7 +31,8 @@ def get_dot(A, B):
     return A.x*B.x + A.y*B.y
 
 def get_closest_to_line(A, vec, P):
-    """return the closest point to P that is inside the line directed by vec and that passes through A"""
+    """return the closest point to P that is inside the line directed by vec
+    and that passes through A"""
 
     dap = v2(P.x-A.x, P.y-A.y)
 
@@ -95,7 +78,8 @@ def get_equidistant(A, B, C):
         mv = v.x/v.y
         div = u.x - mv*u.y
 
-        # div shouldn't be zero, we checked that above with colinear vectors check
+        # div shouldn't be zero,
+        # we checked that above with colinear vectors check
         t = (N.x - M.x + mv * (M.y-N.y)) / div
 
     else:
@@ -110,9 +94,9 @@ def find_neighbors(points, box):
     """using this method:
     two cells are neighbors if they share a side. start with a long line (bound
     using the size of the provided boundig box) then, trim this segment by
-    computing where, along that line, the points start getting closer to
-    another cell (meaning they are inside another cell, and not part of the
-    edge between the two current cells
+    computing where, along that line, the points start getting closer to another
+    cell (meaning they are inside another cell, and not part of the edge between
+          the two current cells
     """
 
     N = len(points)
@@ -175,8 +159,10 @@ def find_neighbors(points, box):
 
                 if X is None:
                     # edge case where A, B and P are aligned
-                    # or the weights and the points distance make an intersection point impossible
-                    # in this case, either P doesn't affect anything, or it blocks the entire thing
+                    # or the weights and the points distance render an
+                    # intersection point impossible
+                    # in this case, either P doesn't affect anything, or it
+                    # blocks the entire thing
                     # depending on the ordering of the points
 
                     if get_dot(v2(P.x-A.x, P.y-A.y), v2(P.x-B.x, P.y-B.y)) < 0:
@@ -190,7 +176,8 @@ def find_neighbors(points, box):
                 # get how far down the line this point is
                 t = get_t(mid, vec, X)
 
-                # get which bound is being modified by looking at which side of (AB) P is
+                # get which bound is being modified by looking at
+                # which side of (AB) P is
                 H = get_closest_to_line(mid, vec, P)
                 t_side = get_t(mid, vec, H)
 
@@ -220,11 +207,13 @@ def insert_in_polygon(polygon, point, angle):
     polygon.insert(j, (point, angle))
 
 def complete_polygon(A, B, polygon, points, box):
-    """using this method:
-    for each neighbor B, find the ray that originates from the middle point between A and B and goes along the neighbor line.
-    then, calculate the intersection points with all four bounds,
-    discarding them when they are not part of the current cell.
-    among the remaining ones, the closest intersection to the start of the ray is where a point should be added
+    """Using this method:
+    For each neighbor B, find the ray that originates from the middle point
+    between A and B and goes along the neighbor line.
+    Then, calculate the intersection points with all four bounds, discarding
+    them when they are not part of the current cell.
+    Among the remaining ones, the closest intersection to the start of the ray
+    is where a point should be added.
     """
 
     N = len(points)
@@ -235,7 +224,8 @@ def complete_polygon(A, B, polygon, points, box):
     inters = []
     mind = None
 
-    for target, index in zip((box.left, box.right, box.top, box.bottom), (0, 0, 1, 1)):
+    for target, index in zip((box.left, box.right, box.top, box.bottom),
+                             (0, 0, 1, 1)):
         div = vec.y if index else vec.x
         # no intersection here (vertical/horizontal neighbor line)
         if not div:
@@ -248,7 +238,8 @@ def complete_polygon(A, B, polygon, points, box):
         inter = v2(mid.x + vec.x*t, mid.y + vec.y*t)
 
         # check if this point is actually part of the current cell
-        # warning: since the point is on the edge of another cell, need to ignore it as well
+        # warning: since the point is on the edge of another cell,
+        # need to ignore it as well
         d = get_dist2(A, inter)
         accessible = True
         for k in range(N):
@@ -307,7 +298,8 @@ def make_polygons(points, box):
             j, k = n[index-1], n[index]
             B, C = points[j], points[k]
 
-            # these two neighbors are not linked (probably on the outside of the graph), don't link them
+            # these two neighbors are not linked (probably on the outside of the
+            # graph), don't link them
             if k not in neighbors[j]:
                 to_fix.append((B, C))
 
@@ -343,13 +335,15 @@ def make_polygons(points, box):
 
             # insert the point at the right index
             if accessible:
-                insert_in_polygon(polygon, bound, atan2(bound.y-A.y, bound.x-A.x))
+                insert_in_polygon(polygon, bound,
+                                  atan2(bound.y-A.y, bound.x-A.x))
 
         # sort the polygon points
         polygon = [point[0] for point in sorted(polygon, key=sort_p)]
 
         if len(polygon) < 3:
-            # veeeeery rare but can happen (basically when like 1000 points align)
+            # veeeeery rare but can happen (basically when like 1000 points
+            # align)
             continue
 
         polygons.append(polygon)

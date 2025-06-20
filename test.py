@@ -28,7 +28,8 @@ def rand_col():
 
 def display(points, points_cols, neighbors, polygons):
     for i, polygon in enumerate(polygons):
-        pygame.draw.polygon(screen, points_cols[i], [p.to_tuple() for p in polygon])
+        pygame.draw.polygon(screen, points_cols[i],
+                            [p.to_tuple() for p in polygon])
 
     mul = 1
     for i, polygon in enumerate(polygons):
@@ -43,7 +44,9 @@ def display(points, points_cols, neighbors, polygons):
 
     for i in range(N):
         for j in neighbors[i]:
-            pygame.draw.line(screen, gray, points[i].to_tuple(), points[j].to_tuple())
+            pygame.draw.line(screen, gray,
+                             points[i].to_tuple(),
+                             points[j].to_tuple())
 
     for A in points:
         pygame.draw.rect(screen, black, Rect(A.x-1, A.y-1, 3, 3))
@@ -55,8 +58,7 @@ def bad_voronoi(points, box, step=2):
     # draw cells
     for x in range(box.left, box.right, step):
         for y in range(box.top, box.bottom, step):
-            min = None
-            mind = 0
+            min = mind = 0
 
             pixel = v2(x, y)
             for i, point in enumerate(points):
@@ -70,8 +72,28 @@ def bad_voronoi(points, box, step=2):
 
     pygame.display.flip()
 
+def remove_collisions(points):
+    """ugly, but needed in case some points are in the same place"""
+
+    N = len(points)
+    while True:
+        ok = True
+
+        for i in range(N):
+            for j in range(N):
+                if i == j:
+                    continue
+
+                if points[i] == points[j]:
+                    points[j].x += 1e-3
+                    ok = False
+
+        if ok:
+            return
+
 def make_points():
-    points = [Point(randint(box.left, box.right), randint(box.top, box.bottom)) for _ in range(N)]
+    points = [Point(randint(box.left, box.right), randint(box.top, box.bottom))
+              for _ in range(N)]
     points = [
         Point(200, 200),
         Point(200, 520),
@@ -97,7 +119,8 @@ def run(points, points_cols):
 
 # main loops
 def perf_demo():
-    """runs the selected approach multiple times, either on click or every frame"""
+    """runs the selected approach multiple times,
+    either on click or every frame"""
 
     run(*make_points())
 
