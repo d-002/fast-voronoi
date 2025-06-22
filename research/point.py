@@ -8,6 +8,7 @@ class Point:
 
     def __init__(self, pos, label, font, color=None):
         self.pos = pos
+        self.x, self.y = pos
 
         if color is None:
             color = Point.BASE_COLOR
@@ -47,6 +48,7 @@ class Point:
                 mx - self.delta_move[0],
                 my - self.delta_move[1]
             )
+            self.x, self.y = self.pos
             self.rect.x = self.pos[0]-Point.RADIUS
             self.rect.y = self.pos[1]-Point.RADIUS
 

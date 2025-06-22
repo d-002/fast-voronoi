@@ -139,7 +139,7 @@ def get_circle(A, B, wa, wb):
     return pos, r2
 
 
-def get_inter(ca, cb):
+def circle_inter(ca, cb):
     # warning: the radii are already squared
     a1, b1 = ca[0]
     r1, r2 = ca[1], cb[1]
@@ -152,20 +152,7 @@ def get_inter(ca, cb):
     b = db*rest / (da*da) - 2*a1*db/da - 2*b1
     c = rest*rest / (4*da*da) - a1*rest/da + a1*a1 + b1*b1 - r1
 
-    delta = b*b - 4*a*c
-    if delta < 0:
-        solutions = []
-    else:
-        d = sqrt(delta)
-
-        solutions = [
-            (-b-d) / (2*a),
-            (-b+d) / (2*a)
-        ]
-
-        # not going to bother with the case where delta == 0, since this case
-        # will virtually never happen, and having duplicate intersection points
-        # will not make a difference in the end
+    solutions = quadratic(a, b, c)
 
     for i in range(len(solutions)):
         y = solutions[i]
@@ -176,22 +163,60 @@ def get_inter(ca, cb):
     return solutions
 
 
-def get_inter_line(circle, line):
-    pass
+def quadratic(a, b, c):
+    delta = b*b - 4*a*c
+    if delta < 0:
+        return []
+    if delta == 0:
+        return [-b / (2*a)]
+
+    d = sqrt(delta)
+    return [
+            (-b - d) / (2*a),
+            (-b + d) / (2*a)
+    ]
 
 
-def is_neighbor(A, B):
-    B.weight = A.weight
+def circle_inter_line(mid, vec, circle):
+    x0, y0 = mid.x, mid.y
+    xu, yu = vec.x, vec.y
+    xc, yc = circle[0]
+    r = circle[1]
 
-    if A.weight == B.weight:
+    # avoid divisions by zero
+    if abs(xu) < abs(yu):
+        a = 1 + xu*xu/(yu*yu)
+        b = (2*x0*xu - 2*xc*xu - 2*y0 * (xu*xu)/yu) / yu - 2*yc
+        c = x0*x0 + xc*xc + yc*yc - r*r - 2*xc*x0 + y0*xu/yu * (2*xc - 2*x0 + y0*xu/yu)
+
+        solutions = quadratic(a, b, c)
+
+        return [v2(x0 + (y-y0) / yu * xu, y) for y in solutions]
+    else:
+        a = 1 + yu*yu/(xu*xu)
+        b = (2*y0*yu - 2*yc*yu - 2*x0 * (yu*yu)/xu) / xu - 2*xc
+        c = y0*y0 + xc*xc + yc*yc - r*r - 2*yc*y0 + x0*yu/xu * (2*yc - 2*y0 + x0*yu/xu)
+
+        solutions = quadratic(a, b, c)
+
+        return [v2(y0 + (x-x0) / xu * yu, x) for x in solutions]
+
+def is_neighbor(i, j):
+    A, B = points[i], points[j]
+    wa, wb = weights[i], weights[j]
+    wa = wb
+
+    if wa == wb:
         tmin, tmax = -1e6, 1e6
         mid, vec = get_median(A, B)
 
-        for P in points:
+        for k, P in enumerate(points):
+            wp = weights[k]
+
             if P == A or P == B:
                 continue
 
-            if P.weight == A.weight:
+            if wp == wa:
                 # line to line intersection
 
                 X = get_equidistant(A, B, P)
@@ -218,8 +243,8 @@ def is_neighbor(A, B):
                 # example, if A has a higher weight (smaller circle), then the
                 # intersection point will be dragged closer to it, even from C)
 
-                circle = get_circle(A.pos, P.pos, A.weight, P.weight)
-                intersections = get_inter_line(mid, vec, circle)
+                circle = get_circle(A.pos, P.pos, wa, wp)
+                intersections = circle_inter_line(mid, vec, circle)
 
                 if not intersections:
                     continue
@@ -305,10 +330,13 @@ while run:
 
     # try:
     for i in range(len(points)):
+        neighbors = []
+
         for j in range(len(points)):
             if j == i:
                 continue
 
+            # check circles intersections
             for k in range(len(points)):
                 if k == i or k == j:
                     continue
@@ -323,9 +351,17 @@ while run:
                 pygame.draw.circle(screen, (255, 0, 0), ac[0],
                                    sqrt(ac[1]), width=1)
 
-                inter = get_inter(ab, ac)
+                inter = circle_inter(ab, ac)
                 for pos in inter:
                     pygame.draw.circle(screen, (0, 255, 0), pos, 7)
+
+            if is_neighbor(i, j):
+                neighbors.append(j)
+
+        # display neighbors lines
+        for j in neighbors:
+            pygame.draw.line(screen, (0, 0, 0), points[i].pos, points[j].pos)
+
     # except ZeroDivisionError:
     #     screen.blit(font.render('zero div', True, (255, 0, 0)), (0, 0))
 
