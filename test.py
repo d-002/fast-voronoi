@@ -58,13 +58,14 @@ def bad_voronoi(points, box, step=2):
     # draw cells
     for x in range(box.left, box.right, step):
         for y in range(box.top, box.bottom, step):
-            min = mind = 0
+            min = -1
+            mind = 0
 
             pixel = v2(x, y)
             for i, point in enumerate(points):
                 d = get_dist2(point, pixel)
 
-                if d < mind or min is None:
+                if d < mind or min == -1:
                     min = i
                     mind = d
 

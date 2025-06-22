@@ -1,5 +1,6 @@
 import pygame
-from pygame.locals import *
+from pygame.locals import Rect, MOUSEBUTTONDOWN, MOUSEBUTTONUP
+
 
 class Point:
     BASE_COLOR = (0, 0, 0)
@@ -8,7 +9,8 @@ class Point:
     def __init__(self, pos, label, font, color=None):
         self.pos = pos
 
-        if color is None: color = Point.BASE_COLOR
+        if color is None:
+            color = Point.BASE_COLOR
         self.color = color
 
         self.label = font.render(label, True, color)
@@ -33,7 +35,7 @@ class Point:
                 if self.rect.collidepoint(event.pos):
                     self.prev_pos = tuple(self.pos)
                     self.delta_move = (event.pos[0]-self.pos[0],
-                                   event.pos[1]-self.pos[1])
+                                       event.pos[1]-self.pos[1])
                     res = True
 
             elif event.type == MOUSEBUTTONUP and event.button == 1:
@@ -53,6 +55,7 @@ class Point:
         pygame.draw.circle(surf, self.color, self.pos, Point.RADIUS)
 
         # label
-        surf.blit(self.label, (self.rect.right+5, self.pos[1] - self.label.get_height()/2))
+        surf.blit(self.label,
+                  (self.rect.right+5, self.pos[1] - self.label.get_height()/2))
 
         return res

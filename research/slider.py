@@ -1,5 +1,6 @@
 import pygame
-from pygame.locals import *
+from pygame.locals import Rect, MOUSEBUTTONDOWN, MOUSEBUTTONUP
+
 
 class Slider:
     SLIDER_COL = (150, 150, 150)
@@ -45,7 +46,9 @@ class Slider:
 
         # label
         label = self.font.render(
-            "%s = %.3f" %(self.label, self.get()),
+            "%s = %.3f" % (self.label, self.get()),
             True,
             Slider.HANDLE_COL)
-        surf.blit(label, (self.rect.right+10, self.rect.top + (self.rect.height-label.get_height())/2))
+
+        offset = (self.rect.height-label.get_height())/2
+        surf.blit(label, (self.rect.right+10, self.rect.top + offset))

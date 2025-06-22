@@ -97,3 +97,9 @@ just draw a circle
 
 ### Handling bounds
 compute intersections with the bounds (circle to line or line to line)
+
+### Other thoughts
+
+Cache the calculated edges for later, to reuse them in different cells.
+Maybe do a first pass calculating all the required edges and adding them to a set, and then a second pass that calculates them all and computes all the final polygons at once?
+As a result, there will be no "gaps" between cells, and the grid system solution can be discarded

@@ -2,6 +2,7 @@ from math import sqrt, atan2, pi, tau
 
 smol = 1e-9
 
+
 class v2:
     def __init__(self, x, y):
         self.x, self.y = x, y
@@ -10,7 +11,8 @@ class v2:
         return (self.x, self.y)
 
     def __repr__(self):
-        return 'v2(%.3f, %.3f)' %(self.x, self.y)
+        return 'v2(%.3f, %.3f)' % (self.x, self.y)
+
 
 class Point(v2):
     def __init__(self, x, y, weight=1):
@@ -23,14 +25,17 @@ class Point(v2):
 
         self.weight = weight
 
+
 def get_dist2(A, B):
     dx = B.x-A.x
     dy = B.y-A.y
 
     return dx*dx + dy*dy
 
+
 def get_dot(A, B):
     return A.x*B.x + A.y*B.y
+
 
 def get_closest_to_line(A, vec, P):
     """
@@ -44,8 +49,10 @@ def get_closest_to_line(A, vec, P):
 
     return v2(A.x + vec.x*t, A.y + vec.y*t)
 
+
 def get_middle(A, B):
     return Point((A.x+B.x) / 2, (A.y+B.y) / 2)
+
 
 def get_median(A, B):
     dx, dy = B.x-A.x, B.y-A.y
@@ -55,6 +62,7 @@ def get_median(A, B):
     u = v2((B.y-A.y) / dab, (A.x-B.x) / dab)
 
     return mid, u
+
 
 def get_t(M, u, P):
     """
@@ -66,6 +74,7 @@ def get_t(M, u, P):
         return (P.y-M.y) / u.y
 
     return (P.x-M.x) / u.x
+
 
 def get_equidistant(A, B, C):
     """
@@ -100,14 +109,15 @@ def get_equidistant(A, B, C):
 
     return v2(M.x + u.x*t, M.y + u.y*t)
 
+
 def find_neighbors(points, box):
     """
     Using this method:
     Two cells are neighbors if they share a side. start with a long line (bound
     using the size of the provided bounding box), then trim this segment by
-    computing where, along that line, the points start getting closer to another
-    cell (meaning they are inside another cell, and not part of the edge between
-    the two current cells).
+    computing where, along that line, the points start getting closer to
+    another cell (meaning they are inside another cell, and not part of the
+    edge between the two current cells).
     This process will gradually trim the intersection line until it either
     represents an existing line (meaning the two cells are neighbors) or not.
     """
@@ -124,7 +134,8 @@ def find_neighbors(points, box):
 
             B = points[j]
 
-            # get the line equation for points that are equidistant from A and B
+            # get the line equation for points that are equidistant from A and
+            # B
             mid, vec = get_median(A, B)
 
             # define the bounds according to the allowed space
@@ -141,6 +152,10 @@ def find_neighbors(points, box):
                 bounds[2] = (box.top-mid.y) / vec.y
                 # bottom
                 bounds[3] = (box.bottom-mid.y) / vec.y
+
+            # the case where vec.x == vec.y == 0 should not exist, will get an
+            # error relating to comparing None values if there is an issue with
+            # this
 
             if vec.x:
                 if vec.y:
@@ -208,6 +223,7 @@ def find_neighbors(points, box):
 
     return neighbors
 
+
 def insert_in_polygon(polygon, point, angle):
     j = 0
     for j in range(len(polygon)):
@@ -215,6 +231,7 @@ def insert_in_polygon(polygon, point, angle):
             break
 
     polygon.insert(j, (point, angle))
+
 
 def complete_polygon(A, B, polygon, points, box):
     """
@@ -225,8 +242,8 @@ def complete_polygon(A, B, polygon, points, box):
     current cell (A).
     Then, calculate the intersection points with this line and all four box
     bounds, discarding these points when they are outside the current cell
-    (meaning this cell does not reach the given bound, hence there should not be
-    an intersection point here).
+    (meaning this cell does not reach the given bound, hence there should not
+    be an intersection point here).
     """
 
     N = len(points)
@@ -235,7 +252,6 @@ def complete_polygon(A, B, polygon, points, box):
 
     # compute intersections
     inters = []
-    mind = None
 
     for target, index in zip((box.left, box.right, box.top, box.bottom),
                              (0, 0, 1, 1)):
@@ -278,6 +294,7 @@ def complete_polygon(A, B, polygon, points, box):
     for inter in inters:
         insert_in_polygon(polygon, inter, atan2(inter.y-A.y, inter.x-A.x))
 
+
 def make_polygons(points, box):
     polygons = []
     neighbors = find_neighbors(points, box)
@@ -305,21 +322,20 @@ def make_polygons(points, box):
         n = sorted(n, key=sort_n)
 
         # build basic polygon from neighbors intersections
-        polygon = [] # list of ((x, y), angle)
-        to_fix = [] # list of (point, point)
+        polygon = []  # list of ((x, y), angle)
+        to_fix = []  # list of (point, point)
         for index in range(len(n)):
             j, k = n[index-1], n[index]
             B, C = points[j], points[k]
 
-            # these two neighbors are not linked (probably on the outside of the
-            # graph), don't link them
+            # these two neighbors are not linked (probably on the outside of
+            # the graph), don't link them
             if k not in neighbors[j]:
                 to_fix.append((B, C))
 
             # no issues, add point to the polygon
             else:
                 X = get_equidistant(A, B, C)
-                X = gradient_move(X, A, B, C)
                 polygon.append((X, atan2(X.y-A.y, X.x-A.x)))
 
         # fix partially enclosed polygons by adding bound intersections
@@ -355,7 +371,7 @@ def make_polygons(points, box):
         polygon = [point[0] for point in sorted(polygon, key=sort_p)]
 
         if len(polygon) < 3:
-            # veeeeery rare but can happen (basically when like 1000 points
+            # veeeeery rare but can happen (basically when like all points
             # align)
             continue
 
