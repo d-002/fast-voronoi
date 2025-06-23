@@ -1,10 +1,12 @@
 import pygame
 from pygame.locals import Rect, KEYDOWN, MOUSEBUTTONUP, K_ESCAPE, QUIT
 from math import sqrt
-from random import randint
+from random import seed, randint
 
 from slider import Slider
 from point import Point
+
+seed(16)
 
 
 class v2:
@@ -26,10 +28,13 @@ points = []
 
 weights = [1, .884, 2, 1.2]
 pos = [(100, 400), (300, 50), (400, 250), (280, 150)]
-for i in range(4):
+#weights = [1, 2, 1, 1]
+#pos = [(100, 300), (500, 400), (350, 100), (600, 120)]
+for i in range(len(pos)):
     sliders.append(Slider(Rect(20, 20 + 30*i, 100, 30), .1, 5, chr(97+i), font,
                           weights[i]))
     points.append(Point(pos[i], chr(65+i), font))
+del pos
 
 colors = [[randint(127, 255) for _ in range(3)] for _ in range(len(points))]
 
@@ -145,22 +150,27 @@ def circle_inter(ca, cb):
     r1, r2 = ca[1], cb[1]
     a2, b2 = cb[0]
 
-    # solve quadratic equation for y
     da, db = a2-a1, b1-b2
+
+    # avoid divisions by zero
+    if abs(da) < abs(db) or True:
+        rest = r1 - r2 + a2*a2 - a1*a1 + b2*b2 - b1*b1
+        a = 1 + da*da / (db*db)
+        b = da*rest / (db*db) - 2*b1*da/db - 2*a1
+        c = rest*rest / (4*db*db) - b1*rest/db + a1*a1 + b1*b1 - r1
+
+        solutions = quadratic(a, b, c)
+
+        return [(x, (2*da*x + rest) / (2*db)) for x in solutions]
+
     rest = r1 - r2 + a2*a2 - a1*a1 + b2*b2 - b1*b1
-    a = db*db / (da*da) + 1
+    a = 1 + db*db / (da*da)
     b = db*rest / (da*da) - 2*a1*db/da - 2*b1
     c = rest*rest / (4*da*da) - a1*rest/da + a1*a1 + b1*b1 - r1
 
     solutions = quadratic(a, b, c)
 
-    for i in range(len(solutions)):
-        y = solutions[i]
-        x = (2*db*y + rest) / (2*da)
-
-        solutions[i] = (x, y)
-
-    return solutions
+    return [((2*db*y + rest) / (2*da), y) for y in solutions]
 
 
 def quadratic(a, b, c):
@@ -181,30 +191,29 @@ def circle_inter_line(mid, vec, circle):
     x0, y0 = mid.x, mid.y
     xu, yu = vec.x, vec.y
     xc, yc = circle[0]
-    r = circle[1]
+    r2 = circle[1]  # todo: use a custom data structure for circle, to indicate the radius is squared already
 
     # avoid divisions by zero
     if abs(xu) < abs(yu):
         a = 1 + xu*xu/(yu*yu)
         b = (2*x0*xu - 2*xc*xu - 2*y0 * (xu*xu)/yu) / yu - 2*yc
-        c = x0*x0 + xc*xc + yc*yc - r*r - 2*xc*x0 + y0*xu/yu * (2*xc - 2*x0 + y0*xu/yu)
+        c = x0*x0 + xc*xc + yc*yc - r2 - 2*xc*x0 + y0*xu/yu * (2*xc - 2*x0 + y0*xu/yu)
 
         solutions = quadratic(a, b, c)
 
         return [v2(x0 + (y-y0) / yu * xu, y) for y in solutions]
-    else:
-        a = 1 + yu*yu/(xu*xu)
-        b = (2*y0*yu - 2*yc*yu - 2*x0 * (yu*yu)/xu) / xu - 2*xc
-        c = y0*y0 + xc*xc + yc*yc - r*r - 2*yc*y0 + x0*yu/xu * (2*yc - 2*y0 + x0*yu/xu)
 
-        solutions = quadratic(a, b, c)
+    a = 1 + yu*yu/(xu*xu)
+    b = (2*y0*yu - 2*yc*yu - 2*x0 * (yu*yu)/xu) / xu - 2*xc
+    c = y0*y0 + xc*xc + yc*yc - r2 - 2*yc*y0 + x0*yu/xu * (2*yc - 2*y0 + x0*yu/xu)
 
-        return [v2(y0 + (x-x0) / xu * yu, x) for x in solutions]
+    solutions = quadratic(a, b, c)
+
+    return [v2(x, y0 + (x-x0) / xu * yu) for x in solutions]
 
 def is_neighbor(i, j):
     A, B = points[i], points[j]
     wa, wb = weights[i], weights[j]
-    wa = wb
 
     if wa == wb:
         tmin, tmax = -1e6, 1e6
@@ -227,8 +236,7 @@ def is_neighbor(i, j):
                         tmin = 1
                         tmax = 0
                         break
-                    else:
-                        continue
+                    continue
 
             else:
                 # line to circle intersection
@@ -259,11 +267,14 @@ def is_neighbor(i, j):
                 else:
                     X = intersections[0]
 
+            pygame.draw.circle(screen, (127, 127, 255), (X.x, X.y), 10)
+
             t = get_t(mid, vec, X)
             # get how far down the line this point is
 
             # get which bound is being modified by looking at
             # which side of (AB) P is
+            # todo: optimize with dot(vec, P-mid)?
             H = get_closest_to_line(mid, vec, P)
             t_side = get_t(mid, vec, H)
 
@@ -341,10 +352,13 @@ while run:
                 if k == i or k == j:
                     continue
 
-                ab = get_circle(points[i].pos, points[j].pos,
-                                sliders[i].get(), sliders[j].get())
-                ac = get_circle(points[i].pos, points[k].pos,
-                                sliders[i].get(), sliders[k].get())
+                try:
+                    ab = get_circle(points[i].pos, points[j].pos,
+                                    sliders[i].get(), sliders[j].get())
+                    ac = get_circle(points[i].pos, points[k].pos,
+                                    sliders[i].get(), sliders[k].get())
+                except ZeroDivisionError:
+                    continue
 
                 pygame.draw.circle(screen, (255, 0, 0), ab[0],
                                    sqrt(ab[1]), width=1)

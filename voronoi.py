@@ -198,8 +198,7 @@ def find_neighbors(points, box):
                         tmin = 1
                         tmax = 0
                         break
-                    else:
-                        continue
+                    continue
 
                 # get how far down the line this point is
                 t = get_t(mid, vec, X)
