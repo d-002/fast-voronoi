@@ -2,10 +2,11 @@ import pygame
 from pygame.locals import Rect, KEYDOWN, MOUSEBUTTONUP, K_ESCAPE, QUIT
 from pygame.math import Vector2 as v2
 
-from math import sqrt
+from math import sqrt, atan2, tau
 from random import seed, randint
 
 from point import Point
+from block_manager import BlockManager
 
 seed(16)
 
@@ -23,6 +24,8 @@ points: list[Point] = []
 
 pos = [v2(100, 400), v2(300, 50), v2(400, 250), v2(280, 150)]
 weights = [1, .884, 2, 1.2]
+pos[2].x += 100
+weights[2] += 2
 #pos = [v2(100, 300), v2(500, 400), v2(350, 100), v2(600, 120)]
 #weights = [1, 2, 1, 1]
 for i, (p, w) in enumerate(zip(pos, weights)):
@@ -204,9 +207,10 @@ def circle_inter_line(mid: v2, vec: v2, circle: tuple):
 
     return [v2(x, y0 + (x-x0) / xu * yu) for x in solutions]
 
-def is_neighbor(i, j):
+def is_neighbor(i: int, j: int):
     A, B = points[i], points[j]
 
+    # TODO THIS IS FALSE, LINE TO CIRCLE ONLY CUTS A PORTION OF THE LINE
     if abs(A.weight-B.weight) < smol:
         tmin, tmax = -1e6, 1e6
         mid, vec = get_median(A.pos, B.pos)
@@ -279,8 +283,48 @@ def is_neighbor(i, j):
         return tmax > tmin
 
     else:
-        return False
+        circle = get_circle(A, B)
+        manager = BlockManager()
 
+        for P in points:
+            if P == A or P == B:
+                continue
+
+            # line to circle intersection
+            if abs(A.weight - P.weight) < smol:
+                mid, vec = get_median(A.pos, P.pos)
+                intersections = circle_inter_line(mid, vec, circle)
+
+            # circles intersection
+            else:
+                other = get_circle(A, P)
+                intersections = circle_inter(circle, other)
+
+            if len(intersections) < 2:
+                continue
+
+            # compute which side of the circle will be blocked, depending on
+            # where P is
+            da = intersections[0]-A.pos
+            db = intersections[1]-A.pos
+            dp = P.pos-A.pos
+            a_a = atan2(da.y, da.x)
+            a_b = atan2(db.y, db.x)
+            a_p = atan2(dp.y, dp.x)
+
+            if a_b < a_a:
+                a_b += tau
+            if a_p < a_a:
+                a_p += tau
+
+            if a_a < a_p < a_b:
+                manager.add_block((a_a, a_b))
+            else:
+                manager.add_block((a_b, a_a+tau))
+
+            if manager.is_blocked:
+                return False
+        return True
 
 # duplicate from test.py
 def get_dist2(point, pos, weight=1):
