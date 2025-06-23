@@ -135,7 +135,7 @@ def get_circle(A: Point, B: Point):
     gamma_y = c_y/a - alpha_y*alpha_y
 
     r2 = -gamma_x-gamma_y
-    pos = (-alpha_x, -alpha_y)
+    pos = v2(-alpha_x, -alpha_y)
 
     return pos, r2
 
@@ -283,6 +283,10 @@ def is_neighbor(i: int, j: int):
         return tmax > tmin
 
     else:
+        # make sure the circle is centered around A
+        if A.weight < B.weight:
+            A, B = B, A
+
         circle = get_circle(A, B)
         manager = BlockManager()
 
@@ -295,32 +299,57 @@ def is_neighbor(i: int, j: int):
                 mid, vec = get_median(A.pos, P.pos)
                 intersections = circle_inter_line(mid, vec, circle)
 
+                if len(intersections) < 2:
+                    continue
+
+                # block a part of the circle
+                kjsdhksjdfh
+
             # circles intersection
             else:
+                # todo: cache circle intersections etc at first
                 other = get_circle(A, P)
                 intersections = circle_inter(circle, other)
 
-            if len(intersections) < 2:
-                continue
+                """
+                if len(intersections) < 2:
+                    if other[1] < circle[1]:
+                        if get_dist2(A.pos, P.pos) > circle[1] \
+                                and A.weight < P.weight:
+                            continue
 
-            # compute which side of the circle will be blocked, depending on
-            # where P is
-            da = intersections[0]-A.pos
-            db = intersections[1]-A.pos
-            dp = P.pos-A.pos
-            a_a = atan2(da.y, da.x)
-            a_b = atan2(db.y, db.x)
-            a_p = atan2(dp.y, dp.x)
+                        if A.weight < P.weight:
+                            continue
+                        return False
 
-            if a_b < a_a:
-                a_b += tau
-            if a_p < a_a:
-                a_p += tau
+                    continue
+                """
+                if len(intersections) < 2:
+                    if other[1] < circle[1] and A.weight > P.weight:
+                        return False
+                    continue
 
-            if a_a < a_p < a_b:
-                manager.add_block((a_a, a_b))
-            else:
-                manager.add_block((a_b, a_a+tau))
+                # compute which side of the circle will be blocked, depending on
+                # where P is: find the center of the arc created by the block,
+                # and see whether it is closer than the original edge
+
+                da = intersections[0]-A.pos
+                db = intersections[1]-A.pos
+                a_a = atan2(da.y, da.x)
+                a_b = atan2(db.y, db.x)
+
+                if a_b < a_a:
+                    a_b += tau
+
+                mid = (intersections[0]+intersections[1]) / 2
+                mid = (mid-other[0]) * \
+                        sqrt(other[1] / get_dist2(mid, other[0])) + other[0]
+
+                if (get_dist2(circle[0], mid) < circle[1]) ^ \
+                        (get_dist2(P.pos, circle[0]) < circle[1]):
+                    manager.add_block((a_a, a_b))
+                else:
+                    manager.add_block((a_b, a_a+tau))
 
             if manager.is_blocked:
                 return False
@@ -328,8 +357,8 @@ def is_neighbor(i: int, j: int):
 
 # duplicate from test.py
 def get_dist2(point, pos, weight=1):
-    dx = (point.x-pos.x)*weight
-    dy = (point.y-pos.y)*weight
+    dx = (point.x-pos.x) * weight
+    dy = (point.y-pos.y) * weight
 
     return dx*dx + dy*dy
 
@@ -410,6 +439,5 @@ while run:
     # except ZeroDivisionError:
     #     screen.blit(font.render('zero div', True, (255, 0, 0)), (0, 0))
 
-    screen.blit(font.render(str([p.weight for p in points]), True, (0, 0, 0)), (0, 0))
     pygame.display.flip()
     clock.tick(60)

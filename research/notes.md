@@ -97,12 +97,15 @@ In case of a diagram with all different weights, there will only be curved edges
 
     - If the second circle is smaller than the first one
         Then it can either be inside or outside the first cell.
-        - If it is outside (as indicated by the third cell being farther than the radius of the first circle), then it does not impact the edge at all.
-        - If it is inside (opposite conclusion), then two cases can occur: either the current cell has the higher weight (meaning it is on the inside of the second circle, that is itself smaller than the first circle, which means the entire edge is blocked), or smaller (then the other cell is the one "inside", and the original edge is left untouched.
+        To distinguish which case is relevant, we can first check if the other cell is closer to the first cell than the radius of the first circle. In that case, the second circle is inside the first one (since it has to pass through the segment between both points, and is exclusively inside the first circle).
+        If it is not the case, then the second circle is inside the first one if and only if it is centered around the first cell, and that is when the first cell has the higher weight.
+
+        - If it is outside, then it does not impact the edge at all.
+        - If it is inside, then two cases can occur: either the current cell has the higher weight (meaning that cell is on the inside of the second circle, that is itself smaller than the first circle, which means the entire edge is blocked), or it is the smaller weight, in which case the other cell is the one that is "inside", and the original edge is left untouched.
 
     - If the second circle is bigger than the first one, then it necessarily has to be outside the first circle. In that case, no matter the weights the second circle will not affect the relevant edge at all.
 
-- 2 intersections between the circles: an arc of the edge circle will be blocked. Now just remains to find which "side" will be removed. For that, some modulo arithmetic can be used to find the side that, when used to create an arc, this arc will intersect with the segment between the current and third points. This is because that side is the one closest to the third cell, and if it were the other side that was part of the third cell, then the first side would be too, which is impossible.
+- 2 intersections between the circles: an arc of the edge circle will be blocked. Now just remains to find which "side" will be removed. For that, it is possible to check whether the created arc will be closer to the current cell than the previous edge (if the other cell is outside, otherwise switch), as for a cell to block some part of an edge with another cell it must be closer. If that is not the case, then the other side of the circle must be the one that is blocked.
 
 In case of a weighted diagram that still creates some, but not all straight lines, it is possible for the two aforementioned worlds to cohabit. Two cases can occur then:
 
