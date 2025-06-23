@@ -153,15 +153,15 @@ def circle_inter(ca, cb):
     da, db = a2-a1, b1-b2
 
     # avoid divisions by zero
-    if abs(da) < abs(db) or True:
+    if abs(da) < abs(db):
         rest = r1 - r2 + a2*a2 - a1*a1 + b2*b2 - b1*b1
         a = 1 + da*da / (db*db)
-        b = da*rest / (db*db) - 2*b1*da/db - 2*a1
-        c = rest*rest / (4*db*db) - b1*rest/db + a1*a1 + b1*b1 - r1
+        b = -da*rest / (db*db) - 2*b1*da/db - 2*a1
+        c = rest*rest / (4*db*db) + b1*rest/db + a1*a1 + b1*b1 - r1
 
         solutions = quadratic(a, b, c)
 
-        return [(x, (2*da*x + rest) / (2*db)) for x in solutions]
+        return [(x, (2*da*x - rest) / (2*db)) for x in solutions]
 
     rest = r1 - r2 + a2*a2 - a1*a1 + b2*b2 - b1*b1
     a = 1 + db*db / (da*da)
