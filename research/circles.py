@@ -1,17 +1,13 @@
 import pygame
 from pygame.locals import Rect, KEYDOWN, MOUSEBUTTONUP, K_ESCAPE, QUIT
+from pygame.math import Vector2 as v2
+
 from math import sqrt
 from random import seed, randint
 
-from slider import Slider
 from point import Point
 
 seed(16)
-
-
-class v2:
-    def __init__(self, x, y):
-        self.x, self.y = x, y
 
 
 smol = 1e-9
@@ -23,27 +19,26 @@ screen = pygame.display.set_mode((W, H))
 clock = pygame.time.Clock()
 font = pygame.font.SysFont('consolas', 16)
 
-sliders = []
-points = []
+points: list[Point] = []
 
+pos = [v2(100, 400), v2(300, 50), v2(400, 250), v2(280, 150)]
 weights = [1, .884, 2, 1.2]
-pos = [(100, 400), (300, 50), (400, 250), (280, 150)]
-#weights = [1, 2, 1, 1]
-#pos = [(100, 300), (500, 400), (350, 100), (600, 120)]
-for i in range(len(pos)):
-    sliders.append(Slider(Rect(20, 20 + 30*i, 100, 30), .1, 5, chr(97+i), font,
-                          weights[i]))
-    points.append(Point(pos[i], chr(65+i), font))
-del pos
+pos = [v2(100, 300), v2(500, 400), v2(350, 100), v2(600, 120)]
+weights = [1, 2, 1, 1]
+pos = [v2(100, 300), v2(500, 400), v2(350, 100)]
+weights = [1, 2, 1]
+for i, (p, w) in enumerate(zip(pos, weights)):
+    points.append(Point(p, w, i, font))
+del pos, weights
 
 colors = [[randint(127, 255) for _ in range(3)] for _ in range(len(points))]
 
 
-def get_dot(A, B):
+def get_dot(A: v2, B: v2):
     return A.x*B.x + A.y*B.y
 
 
-def get_closest_to_line(A, vec, P):
+def get_closest_to_line(A: v2, vec: v2, P: v2):
     """
     returns the closest point to P that is inside the line directed by vec
     and that passes through A
@@ -56,11 +51,11 @@ def get_closest_to_line(A, vec, P):
     return v2(A.x + vec.x*t, A.y + vec.y*t)
 
 
-def get_middle(A, B):
+def get_middle(A: v2, B: v2):
     return v2((A.x+B.x) / 2, (A.y+B.y) / 2)
 
 
-def get_median(A, B):
+def get_median(A: v2, B: v2):
     dx, dy = B.x-A.x, B.y-A.y
 
     mid = get_middle(A, B)
@@ -70,7 +65,7 @@ def get_median(A, B):
     return mid, u
 
 
-def get_t(M, u, P):
+def get_t(M: v2, u: v2, P: v2):
     """
     returns how far along the line directed by u and that passes through M,
     P is. The "origin" (t = 0) is at M, and t = 1 is at M+u.
@@ -82,7 +77,7 @@ def get_t(M, u, P):
     return (P.x-M.x) / u.x
 
 
-def get_equidistant(A, B, C):
+def get_equidistant(A: v2, B: v2, C: v2):
     """
     Let (a) be the median (origin, directing vector) between A and B, and (b)
     the median between A and C
@@ -116,10 +111,10 @@ def get_equidistant(A, B, C):
     return v2(M.x + u.x*t, M.y + u.y*t)
 
 
-def get_circle(A, B, wa, wb):
-    xa, ya = A
-    xb, yb = B
-    wa2, wb2 = wa*wa, wb*wb
+def get_circle(A: Point, B: Point):
+    xa, ya = A.pos.x, A.pos.y
+    xb, yb = B.pos.x, B.pos.y
+    wa2, wb2 = A.weight*A.weight, B.weight*B.weight
 
     # x polynomial
     a = wa2 - wb2
@@ -144,7 +139,7 @@ def get_circle(A, B, wa, wb):
     return pos, r2
 
 
-def circle_inter(ca, cb):
+def circle_inter(ca: tuple, cb: tuple):
     # warning: the radii are already squared
     a1, b1 = ca[0]
     r1, r2 = ca[1], cb[1]
@@ -161,7 +156,7 @@ def circle_inter(ca, cb):
 
         solutions = quadratic(a, b, c)
 
-        return [(x, (2*da*x - rest) / (2*db)) for x in solutions]
+        return [v2(x, (2*da*x - rest) / (2*db)) for x in solutions]
 
     rest = r1 - r2 + a2*a2 - a1*a1 + b2*b2 - b1*b1
     a = 1 + db*db / (da*da)
@@ -170,7 +165,7 @@ def circle_inter(ca, cb):
 
     solutions = quadratic(a, b, c)
 
-    return [((2*db*y + rest) / (2*da), y) for y in solutions]
+    return [v2((2*db*y + rest) / (2*da), y) for y in solutions]
 
 
 def quadratic(a, b, c):
@@ -187,7 +182,7 @@ def quadratic(a, b, c):
     ]
 
 
-def circle_inter_line(mid, vec, circle):
+def circle_inter_line(mid: v2, vec: v2, circle: tuple):
     x0, y0 = mid.x, mid.y
     xu, yu = vec.x, vec.y
     xc, yc = circle[0]
@@ -213,25 +208,23 @@ def circle_inter_line(mid, vec, circle):
 
 def is_neighbor(i, j):
     A, B = points[i], points[j]
-    wa, wb = weights[i], weights[j]
 
-    if wa == wb:
+    if abs(A.weight-B.weight) < smol:
         tmin, tmax = -1e6, 1e6
-        mid, vec = get_median(A, B)
+        mid, vec = get_median(A.pos, B.pos)
 
-        for k, P in enumerate(points):
-            wp = weights[k]
-
+        for P in points:
             if P == A or P == B:
                 continue
 
-            if wp == wa:
+            if abs(A.weight-P.weight) < smol:
                 # line to line intersection
 
-                X = get_equidistant(A, B, P)
+                X = get_equidistant(A.pos, B.pos, P.pos)
 
                 if X is None:
-                    if get_dot(v2(P.x-A.x, P.y-A.y), v2(P.x-B.x, P.y-B.y)) < 0:
+                    if get_dot(v2(P.pos.x-A.pos.x, P.pos.y-A.pos.y),
+                               v2(P.pos.x-B.pos.x, P.pos.y-B.pos.y)) < 0:
                         # P is between A and B
                         tmin = 1
                         tmax = 0
@@ -251,7 +244,7 @@ def is_neighbor(i, j):
                 # example, if A has a higher weight (smaller circle), then the
                 # intersection point will be dragged closer to it, even from C)
 
-                circle = get_circle(A.pos, P.pos, wa, wp)
+                circle = get_circle(A, P)
                 intersections = circle_inter_line(mid, vec, circle)
 
                 if not intersections:
@@ -275,7 +268,7 @@ def is_neighbor(i, j):
             # get which bound is being modified by looking at
             # which side of (AB) P is
             # todo: optimize with dot(vec, P-mid)?
-            H = get_closest_to_line(mid, vec, P)
+            H = get_closest_to_line(mid, vec, P.pos)
             t_side = get_t(mid, vec, H)
 
             if t_side < 0:
@@ -293,22 +286,22 @@ def is_neighbor(i, j):
 
 # duplicate from test.py
 def get_dist2(point, pos, weight=1):
-    dx = (point.pos[0]-pos[0])*weight
-    dy = (point.pos[1]-pos[1])*weight
+    dx = (point.x-pos.x)*weight
+    dy = (point.y-pos.y)*weight
 
     return dx*dx + dy*dy
 
 
-def bad_voronoi(surf, points, weights, step=2):
+def bad_voronoi(surf, points, step=2):
     # draw cells
     for x in range(0, W, step):
         for y in range(0, H, step):
             min = -1
             mind = 0
 
-            pixel = x, y
-            for i, (point, weight) in enumerate(zip(points, weights)):
-                d = get_dist2(point, pixel, weight)
+            pixel = v2(x, y)
+            for i, point in enumerate(points):
+                d = get_dist2(point.pos, pixel, point.weight)
 
                 if d < mind or min == -1:
                     min = i
@@ -318,7 +311,7 @@ def bad_voronoi(surf, points, weights, step=2):
 
 
 voronoi_surf = pygame.Surface((W, H))
-bad_voronoi(voronoi_surf, points, weights)
+bad_voronoi(voronoi_surf, points)
 
 run = True
 while run:
@@ -329,11 +322,9 @@ while run:
             run = False
 
         if event.type == MOUSEBUTTONUP:
-            bad_voronoi(voronoi_surf, points, weights)
+            bad_voronoi(voronoi_surf, points)
 
     screen.blit(voronoi_surf, (0, 0))
-    for s in sliders:
-        s.update(events, screen)
 
     selected = False
     for p in points:
@@ -353,10 +344,8 @@ while run:
                     continue
 
                 try:
-                    ab = get_circle(points[i].pos, points[j].pos,
-                                    sliders[i].get(), sliders[j].get())
-                    ac = get_circle(points[i].pos, points[k].pos,
-                                    sliders[i].get(), sliders[k].get())
+                    ab = get_circle(points[i], points[j])
+                    ac = get_circle(points[i], points[k])
                 except ZeroDivisionError:
                     continue
 
@@ -379,5 +368,6 @@ while run:
     # except ZeroDivisionError:
     #     screen.blit(font.render('zero div', True, (255, 0, 0)), (0, 0))
 
+    screen.blit(font.render(str([p.weight for p in points]), True, (0, 0, 0)), (0, 0))
     pygame.display.flip()
     clock.tick(60)
