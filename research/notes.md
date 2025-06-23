@@ -65,6 +65,8 @@ don't need to sort them I think (just putting this in case I said somewhere else
 Update: this circle may not exist. Need to find neighbors in another way, even though we will still only compute these kinds of intersections: only consider intersections between circles created with these neighbors
 Need a breakthrough if I want something better than O(n^3), which was the complexity found before, and since now the problem is more complex
 
+    # TODO THIS IS FALSE, LINE TO CIRCLE ONLY CUTS A PORTION OF THE LINE
+
 First iteration, to find if a cell is neighboring another cell, algorithm similar to the previous one (for non-weighted diagrams):
 - if the edge between the two cells is a line:
     - if the edge with a third cell is a line, use the same algorithm as before
@@ -77,6 +79,38 @@ First iteration, to find if a cell is neighboring another cell, algorithm simila
 Optimisation thoughts:
 the only way two cells are not neighbors is if there are cells blocking the way, or at the very least one cell blocking it.
 What it means for a cell to "block the way" is "cover" a part of the edge circle. For it to cover it, it has to collide with it. It is therefore possible to at least reduce the number of computations, while still being in O(n^3), by filtering the circles that collide with the first circle. Realistically, this will be something like O(5n^2) for a "normal/balanced" diagram.
+
+Update: this second case will not work
+Example: small circle surrounded by a larger cell, with no intersections between the circles, but which still prevents it from reaching the other second cell.
+
+Updated idea: for two cells to be neighbors, they must share an edge.
+We must then compute their border and see if some of it is made of an edge between these two cells.
+
+In case of a fully unweighted diagram, since the edges are straight lines they do not interfere with one another. In other cases, it is more complicated as the border for a cell can be made out of a single edge, that is created with another cell, hence overriding all the other edges made with other cells.
+
+In case of a diagram with all different weights, there will only be curved edges. We must then compute the original circle edge (for that case, make the current cell be the one with the largest weight, hence the one that will be on the "inner side" of the circle) between the current and potential neighbor cells. Then, some portions of it are trimmed, depending on the status of the edges made with other neighbors:
+
+- 0/1 intersection between the circles:
+    (The potential single intersection point will be ignored here since it mathematically does not alter the final edge shape, which is what we care about.)
+
+    In this case, the third cell is either making a circle inside, or outside the first circle. In all cases, either the edge will not be affected, or it will be completely blocked.
+
+    - If the second circle is smaller than the first one
+        Then it can either be inside or outside the first cell.
+        - If it is outside (as indicated by the third cell being farther than the radius of the first circle), then it does not impact the edge at all.
+        - If it is inside (opposite conclusion), then two cases can occur: either the current cell has the higher weight (meaning it is on the inside of the second circle, that is itself smaller than the first circle, which means the entire edge is blocked), or smaller (then the other cell is the one "inside", and the original edge is left untouched.
+
+    - If the second circle is bigger than the first one, then it necessarily has to be outside the first circle. In that case, no matter the weights the second circle will not affect the relevant edge at all.
+
+- 2 intersections between the circles: an arc of the edge circle will be blocked. Now just remains to find which "side" will be removed. For that, some modulo arithmetic can be used to find the side that, when used to create an arc, this arc will intersect with the segment between the current and third points. This is because that side is the one closest to the third cell, and if it were the other side that was part of the third cell, then the first side would be too, which is impossible.
+
+In case of a weighted diagram that still creates some, but not all straight lines, it is possible for the two aforementioned worlds to cohabit. Two cases can occur then:
+
+- The first and second cells have the same weight, but not the same as the third cell
+In the case of equal weights between the current and possible neighbor cells, the algorithm used will be based on the one used for non-weighted diagrams. A portion of the edge will be removed depending on the intersection with the second circle.
+
+- The first and third cells have the same weight, but not the same as the second cell
+In this case, a portion of the circle edge will be removed just like the case with a fully weighted diagram, except it is much simpler: an arc is removed if and only if there are two intersection points, and which arc to use can be determined the same way as a previous section.
 
 ### What about cells that are split in half?
 Cells can be split by other cells.
