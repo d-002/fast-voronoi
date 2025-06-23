@@ -23,10 +23,8 @@ points: list[Point] = []
 
 pos = [v2(100, 400), v2(300, 50), v2(400, 250), v2(280, 150)]
 weights = [1, .884, 2, 1.2]
-pos = [v2(100, 300), v2(500, 400), v2(350, 100), v2(600, 120)]
-weights = [1, 2, 1, 1]
-pos = [v2(100, 300), v2(500, 400), v2(350, 100)]
-weights = [1, 2, 1]
+#pos = [v2(100, 300), v2(500, 400), v2(350, 100), v2(600, 120)]
+#weights = [1, 2, 1, 1]
 for i, (p, w) in enumerate(zip(pos, weights)):
     points.append(Point(p, w, i, font))
 del pos, weights
@@ -299,7 +297,7 @@ def bad_voronoi(surf, points, step=2):
             min = -1
             mind = 0
 
-            pixel = v2(x, y)
+            pixel = v2(x+.5, y+.5)
             for i, point in enumerate(points):
                 d = get_dist2(point.pos, pixel, point.weight)
 
