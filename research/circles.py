@@ -23,7 +23,7 @@ font = pygame.font.SysFont('consolas', 16)
 points: list[Point] = []
 
 pos = [v2(100, 400), v2(300, 50), v2(400, 250), v2(280, 150)]
-weights = [1, .884, 2, 1.2]
+weights = [1, .884, 2, 1]#.2]
 pos[2].x += 100
 weights[2] += 2
 #pos = [v2(100, 300), v2(500, 400), v2(350, 100), v2(600, 120)]
