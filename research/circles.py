@@ -2,11 +2,11 @@ import pygame
 from pygame.locals import Rect, KEYDOWN, MOUSEBUTTONUP, K_ESCAPE, QUIT
 from pygame.math import Vector2 as v2
 
-from math import sqrt, atan2, tau
+from math import sqrt, cos, sin, atan2, tau
 from random import seed, randint
 
 from point import Point
-from block_manager import BlockManager
+from block_manager import StraightBlockManager, CircleBlockManager
 
 seed(16)
 
@@ -23,11 +23,11 @@ font = pygame.font.SysFont('consolas', 16)
 points: list[Point] = []
 
 pos = [v2(100, 400), v2(300, 50), v2(400, 250), v2(280, 150)]
-weights = [1, .884, 2, 1]#.2]
+weights = [1, .884, 2, 1.2]
 pos[2].x += 100
 weights[2] += 2
-#pos = [v2(100, 300), v2(500, 400), v2(350, 100), v2(600, 120)]
-#weights = [1, 2, 1, 1]
+pos = [v2(100, 400), v2(300, 50), v2(400, 250)]
+weights = [1, 3, 1]
 for i, (p, w) in enumerate(zip(pos, weights)):
     points.append(Point(p, w, i, font))
 del pos, weights
@@ -210,10 +210,9 @@ def circle_inter_line(mid: v2, vec: v2, circle: tuple):
 def is_neighbor(i: int, j: int):
     A, B = points[i], points[j]
 
-    # TODO THIS IS FALSE, LINE TO CIRCLE ONLY CUTS A PORTION OF THE LINE
     if abs(A.weight-B.weight) < smol:
-        tmin, tmax = -1e6, 1e6
         mid, vec = get_median(A.pos, B.pos)
+        manager = StraightBlockManager(-1e6, 1e6)
 
         for P in points:
             if P == A or P == B:
@@ -254,7 +253,7 @@ def is_neighbor(i: int, j: int):
 
                 # in case there are multiple intersections, pick the relevant
                 # one
-                elif len(intersections) > 2:
+                elif len(intersections) == 2:
                     d0 = get_dist2(intersections[0], mid)
                     d1 = get_dist2(intersections[1], mid)
 
@@ -288,7 +287,7 @@ def is_neighbor(i: int, j: int):
             A, B = B, A
 
         circle = get_circle(A, B)
-        manager = BlockManager()
+        manager = CircleBlockManager()
 
         for P in points:
             if P == A or P == B:
@@ -303,7 +302,23 @@ def is_neighbor(i: int, j: int):
                     continue
 
                 # block a part of the circle
-                kjsdhksjdfh
+
+                da = intersections[0]-A.pos
+                db = intersections[1]-A.pos
+                a_a = atan2(da.y, da.x)
+                a_b = atan2(db.y, db.x)
+
+                if a_b < a_a:
+                    a_b += tau
+
+                # find which side of the circle is blocked by checking which
+                # intersection point, once rotated 90deg, is closest to P
+
+                if get_dist2(circle[0] + v2(-sin(a_a), cos(a_a)), P.pos) < \
+                        get_dist2(circle[0] + v2(-sin(a_b), cos(a_b)), P.pos):
+                    manager.add_block((a_a, a_b))
+                else:
+                    manager.add_block((a_b, a_a+tau))
 
             # circles intersection
             else:
