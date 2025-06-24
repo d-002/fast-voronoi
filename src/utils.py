@@ -10,7 +10,7 @@ smol = 1e-9
 ## Basic math utils
 
 
-def get_dist2(point, pos, weight=1) -> float:
+def get_dist2(point: v2, pos: v2, weight: float = 1) -> float:
     """
     returns the weighted Euclidian distance between two points, squared
     """

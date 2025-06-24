@@ -1,12 +1,12 @@
 from math import cos, sin, atan2, tau
+
 from utils import *
+
 from classes.v2 import v2
 from classes.cell import Cell
 from classes.line import Line
 from classes.circle import Circle
 from classes.block_manager import StraightBlockManager, CircleBlockManager
-
-                # todo: cache circle intersections etc at first
 
 def cut_line_line(A: Cell, B: Cell, P: Cell, line1: Line,
                   manager: StraightBlockManager) -> bool:
