@@ -61,6 +61,12 @@ class StraightBlockManager(BlockManager):
 
         self.is_blocked = False
 
+    def block_min(self, t):
+        self.add_block((self.min, t))
+
+    def block_max(self, t):
+        self.add_block((t, self.max))
+
 
 class CircleBlockManager(BlockManager):
     def __init__(self):

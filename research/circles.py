@@ -218,68 +218,70 @@ def is_neighbor(i: int, j: int):
             if P == A or P == B:
                 continue
 
+            # line to line intersection
             if abs(A.weight-P.weight) < smol:
-                # line to line intersection
 
                 X = get_equidistant(A.pos, B.pos, P.pos)
 
                 if X is None:
+                    # edge case where A, B and P are aligned
+                    # intersection point impossible
+                    # in this case, either P doesn't affect anything, or it
+                    # blocks the entire thing
+                    # depending on the ordering of the points
+
                     if get_dot(v2(P.pos.x-A.pos.x, P.pos.y-A.pos.y),
                                v2(P.pos.x-B.pos.x, P.pos.y-B.pos.y)) < 0:
                         # P is between A and B
-                        tmin = 1
-                        tmax = 0
-                        break
+                        return False
                     continue
 
-            else:
-                # line to circle intersection
+                # get how far down the line this point is
+                t = get_t(mid, vec, X)
 
-                # only need to check the intersection circle with A, since its
-                # intersections with the line will be the same as with B
-                # (Easily provable, even with all different weights: the
-                # intersection point is along the median arc between A and B,
-                # meaning we easily know the distance to A relative to B and
-                # vice versa. Then, we know from the weight of C how far away
-                # the point will be from it, relative to both A and B. For
-                # example, if A has a higher weight (smaller circle), then the
-                # intersection point will be dragged closer to it, even from C)
+                # get which bound is being modified by looking at
+                # which side of (AB) P is
+                H = get_closest_to_line(mid, vec, P.pos)
+                t_side = get_t(mid, vec, H)
+
+                if t_side < 0:
+                    manager.block_min(t)
+                else:
+                    manager.block_max(t)
+
+            # line to circle intersection
+            else:
 
                 circle = get_circle(A, P)
                 intersections = circle_inter_line(mid, vec, circle)
 
                 if not intersections:
-                    continue
+                    # circle around P: do nothing
+                    if A.weight < P.weight:
+                        continue
 
-                # in case there are multiple intersections, pick the relevant
-                # one
-                elif len(intersections) == 2:
-                    d0 = get_dist2(intersections[0], mid)
-                    d1 = get_dist2(intersections[1], mid)
+                    # circle around A: block everything
+                    return False
 
-                    X = intersections[d1 < d0]
+                t0 = get_t(mid, vec, intersections[0])
+                t1 = get_t(mid, vec, intersections[1])
+
+                if t0 > t1:
+                    t0, t1 = t1, t0
+
+                # circle around P: block the range between the two points
+                if A.weight < P.weight:
+                    manager.add_block((t0, t1))
+
+                # circle around A: block two ranges outside of the two points
                 else:
-                    X = intersections[0]
+                    manager.block_min(t0)
+                    manager.block_max(t1)
 
-            pygame.draw.circle(screen, (127, 127, 255), (X.x, X.y), 10)
+            if manager.is_blocked:
+                return False
 
-            t = get_t(mid, vec, X)
-            # get how far down the line this point is
-
-            # get which bound is being modified by looking at
-            # which side of (AB) P is
-            # todo: optimize with dot(vec, P-mid)?
-            H = get_closest_to_line(mid, vec, P.pos)
-            t_side = get_t(mid, vec, H)
-
-            if t_side < 0:
-                if t > tmin:
-                    tmin = t
-            else:
-                if t < tmax:
-                    tmax = t
-
-        return tmax > tmin
+        return True
 
     else:
         # make sure the circle is centered around A
@@ -368,6 +370,7 @@ def is_neighbor(i: int, j: int):
 
             if manager.is_blocked:
                 return False
+
         return True
 
 # duplicate from test.py
