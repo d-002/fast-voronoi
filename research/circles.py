@@ -8,8 +8,6 @@ from random import seed, randint
 from point import Point
 from block_manager import StraightBlockManager, CircleBlockManager
 
-seed(16)
-
 
 smol = 1e-9
 
@@ -26,8 +24,8 @@ pos = [v2(100, 400), v2(300, 50), v2(400, 250), v2(280, 150)]
 weights = [1, .884, 2, 1.2]
 pos[2].x += 100
 weights[2] += 2
-pos = [v2(100, 400), v2(300, 50), v2(400, 250)]
-weights = [1, 3, 1]
+#pos = [v2(100, 400), v2(300, 50), v2(400, 250)]
+#weights = [1, 3, 1]
 for i, (p, w) in enumerate(zip(pos, weights)):
     points.append(Point(p, w, i, font))
 del pos, weights
@@ -350,23 +348,24 @@ def is_neighbor(i: int, j: int):
                 # where P is: find the center of the arc created by the block,
                 # and see whether it is closer than the original edge
 
-                da = intersections[0]-A.pos
-                db = intersections[1]-A.pos
+                da = intersections[0]-circle[0]
+                db = intersections[1]-circle[0]
                 a_a = atan2(da.y, da.x)
                 a_b = atan2(db.y, db.x)
 
                 if a_b < a_a:
                     a_b += tau
 
-                mid = (intersections[0]+intersections[1]) / 2
-                mid = (mid-other[0]) * \
-                        sqrt(other[1] / get_dist2(mid, other[0])) + other[0]
+                a_mid = (a_a+a_b) / 2
+                mid = circle[0] + v2(cos(a_mid), sin(a_mid))*sqrt(circle[1])
 
-                if (get_dist2(circle[0], mid) < circle[1]) ^ \
-                        (get_dist2(P.pos, circle[0]) < circle[1]):
-                    manager.add_block((a_a, a_b))
-                else:
-                    manager.add_block((a_b, a_a+tau))
+                # flip condition if the other circle is centered around A, as
+                # that means the incut part of the edgeis the one that is the
+                # most outside of the second circle instead of inside
+                cond = get_dist2(other[0], mid) < other[1]
+                cond ^= A.weight >= P.weight
+
+                manager.add_block((a_a, a_b) if cond else (a_b, a_a+tau))
 
             if manager.is_blocked:
                 return False
