@@ -1,6 +1,8 @@
 # fast-voronoi
 Very fast (multiplicatively weighted) Voronoi diagram display
 
+3.7+
+
 ## Files defined here
 
 - `voronoi.py` Import this file to access main features
@@ -11,7 +13,8 @@ Very fast (multiplicatively weighted) Voronoi diagram display
 - `BoundingBox(l, t, w, h)`
     Similar syntax to [`pygame.Rect`](https://www.pygame.org/docs/ref/rect.html)
     Arguments: `l`: left bound, `t`: top bound, `w`: bound width, `h`: bound height
-todo: to check
+
+# todo: to check
 
 - `v2(x, y)`
     2D vector

@@ -65,8 +65,6 @@ don't need to sort them I think (just putting this in case I said somewhere else
 Update: this circle may not exist. Need to find neighbors in another way, even though we will still only compute these kinds of intersections: only consider intersections between circles created with these neighbors
 Need a breakthrough if I want something better than O(n^3), which was the complexity found before, and since now the problem is more complex
 
-    # TODO THIS IS FALSE, LINE TO CIRCLE ONLY CUTS A PORTION OF THE LINE
-
 First iteration, to find if a cell is neighboring another cell, algorithm similar to the previous one (for non-weighted diagrams):
 - if the edge between the two cells is a line:
     - if the edge with a third cell is a line, use the same algorithm as before
@@ -80,7 +78,8 @@ Optimisation thoughts:
 the only way two cells are not neighbors is if there are cells blocking the way, or at the very least one cell blocking it.
 What it means for a cell to "block the way" is "cover" a part of the edge circle. For it to cover it, it has to collide with it. It is therefore possible to at least reduce the number of computations, while still being in O(n^3), by filtering the circles that collide with the first circle. Realistically, this will be something like O(5n^2) for a "normal/balanced" diagram.
 
-Update: this second case will not work
+**Update: this second case will not work**
+
 Example: small circle surrounded by a larger cell, with no intersections between the circles, but which still prevents it from reaching the other second cell.
 
 Updated idea: for two cells to be neighbors, they must share an edge.
@@ -105,7 +104,7 @@ In case of a diagram with all different weights, there will only be curved edges
 
     - If the second circle is bigger than the first one, then it necessarily has to be outside the first circle. In that case, no matter the weights the second circle will not affect the relevant edge at all.
 
-- 2 intersections between the circles: an arc of the edge circle will be blocked. Now just remains to find which "side" will be removed. For that, it is possible to check whether the created arc will be closer to the current cell than the previous edge (if the other cell is outside, otherwise switch), as for a cell to block some part of an edge with another cell it must be closer. If that is not the case, then the other side of the circle must be the one that is blocked.
+- 2 intersections between the circles: an arc of the edge circle will be blocked. Now just remains to find which "side" will be removed. For that, it is possible to check whether the created arc will be closer to the current cell than the previous edge (if the other cell of larger weight and the second circle is external to the first one, otherwise switch), as for a cell to block some part of an edge with another cell it must be closer. If that is not the case, then the other side of the circle must be the one that is blocked.
 
 In case of a weighted diagram that still creates some, but not all straight lines, it is possible for the two aforementioned worlds to cohabit. Two cases can occur then:
 
