@@ -12,17 +12,16 @@ class BlockManager:
         """returns True if merged something, False otherwise"""
         return False
 
+    @abstractmethod
+    def check_blocked(self):
+        """updates self.is_blocked"""
+        pass
+
     def merge(self):
         while self.merge_inner():
             pass
 
-        # check if the circle is entirely covered
-        for block in self.blocks:
-            if block[1]- block[0] >= tau:
-                self.is_blocked = True
-                return
-
-        self.is_blocked = False
+        self.check_blocked()
 
     def add_block(self, block):
         self.blocks.append(block)
@@ -47,12 +46,20 @@ class StraightBlockManager(BlockManager):
                 b0, b1 = block2[0], block2[1]
 
                 # collision
-                if a0 < b1 and a1 > b0:
+                if a0 <= b1 and a1 >= b0:
                     self.blocks[i] = (min(a0, b0), max(a1, b1))
                     self.blocks.pop(j)
                     return True
 
         return False
+
+    def check_blocked(self):
+        for block in self.blocks:
+            if block[0] <= self.min and block[1] >= self.max:
+                self.is_blocked = True
+                return
+
+        self.is_blocked = False
 
 
 class CircleBlockManager(BlockManager):
@@ -74,10 +81,18 @@ class CircleBlockManager(BlockManager):
                 b1 += offset
 
                 # merging occurs
-                if a0 < b0 < a1:
+                if a0 <= b0 <= a1:
                     self.blocks[i] = (a0, max(a1, b1))
                     self.blocks.pop(j)
 
                     return True
 
         return False
+
+    def check_blocked(self):
+        for block in self.blocks:
+            if block[1] - block[0] >= tau:
+                self.is_blocked = True
+                return
+
+        self.is_blocked = False
