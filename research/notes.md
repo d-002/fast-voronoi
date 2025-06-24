@@ -110,10 +110,10 @@ In case of a diagram with all different weights, there will only be curved edges
 In case of a weighted diagram that still creates some, but not all straight lines, it is possible for the two aforementioned worlds to cohabit. Two cases can occur then:
 
 - The first and second cells have the same weight, but not the same as the third cell
-In the case of equal weights between the current and possible neighbor cells, the algorithm used will be based on the one used for non-weighted diagrams. A portion of the edge will be removed depending on the intersection with the second circle.
+In the case of equal weights between the current and possible neighbor cells, the algorithm used will be based on the one used for non-weighted diagrams. A portion of the edge will be removed depending on the intersection with the second circle. In case there is no intersection and the third cell is of lower weight, then the bounds are changed to a smaller circle, indicating the endire edge is removed just like in the case of a fully weighted diagram.
 
 - The first and third cells have the same weight, but not the same as the second cell
-In this case, a portion of the circle edge will be removed just like the case with a fully weighted diagram, except it is much simpler: an arc is removed if and only if there are two intersection points, and which arc to use can be determined the same way as a previous section.
+In this case, a portion of the circle edge will be removed just like the case with a fully weighted diagram, except it is much simpler: an arc is removed if and only if there are two intersection points, and which arc to use can be determined by rotating the intersection points by pi/2rad around the circle center, and the one closest to the third cell can be used to find the start of the arc (when going counterclockwise) for example.
 
 ### What about cells that are split in half?
 Cells can be split by other cells.
