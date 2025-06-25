@@ -65,7 +65,7 @@ def refresh():
             B = cells[j]
 
             if is_neighbor(cells, i, j):
-                pygame.draw.line(screen, (0, 255, 0), list(A.pos), list(B.pos))
+                pygame.draw.line(screen, (127, 127, 127), list(A.pos), list(B.pos))
                 neighbors[i].append(j)
                 neighbors[j].append(i)
 
@@ -113,10 +113,5 @@ animate = False
 W, H, screen, font = init(1280, 720)
 back = pygame.Surface((W, H))
 gen_cells(W, H)
-
-for _ in range(8):
-    gen_cells(W, H)
-
-refresh()
 
 mainloop(main)

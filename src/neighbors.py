@@ -108,10 +108,10 @@ def cut_circle_line(A: Cell, P: Cell, circle1: Circle,
         a_b += tau
 
     # find which side of the circle is blocked by checking which
-    # intersection point, once rotated 90deg, is closest to P
+    # intersection point, once rotated 90deg, is farthest into P
 
-    if get_dist2(circle1.c + v2(-sin(a_a), cos(a_a)), P.pos) < \
-            get_dist2(circle1.c + v2(-sin(a_b), cos(a_b)), P.pos):
+    if get_t(line2, circle1.c + v2(-sin(a_a), cos(a_a))) > \
+            get_t(line2, circle1.c + v2(-sin(a_b), cos(a_b))):
         manager.add_block((a_a, a_b))
     else:
         manager.add_block((a_b, a_a+tau))
@@ -163,7 +163,7 @@ def cut_circle_circle(A: Cell, P: Cell, circle1: Circle,
     mid = circle1.c + v2(cos(a_mid), sin(a_mid)) * sqrt(circle1.r2)
 
     # flip condition if the other circle is centered around A, as
-    # that means the incut part of the edgeis the one that is the
+    # that means the incut part of the edge is the one that is the
     # most outside of the second circle instead of inside
     cond = get_dist2(circle2.c, mid) < circle2.r2
     cond ^= A.weight >= P.weight
