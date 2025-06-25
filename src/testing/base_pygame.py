@@ -28,5 +28,4 @@ def mainloop(f):
 
         f(events)
 
-        pygame.display.flip()
         clock.tick(fps)

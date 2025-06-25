@@ -1,7 +1,5 @@
 taking rough notes so I don't forget
 
-    # todo: cache circle intersections etc at first
-
 ### Need to create polygons
 will use an approximation for the circles.
 cannot simply use circles intersection points, since e.g:
@@ -23,20 +21,19 @@ plus, there can be multiple, distinct inner bounds (multiple cells inside one bi
 ### Handling non-convex polygons, "incut" circles from other cells
 in the real plane, circles can have at most two intersection points.
 to find the polygon:
-- cache all angles to all points that are included as neighbors with the intersection points
 - find all the intersection points and the data associated with them from the circles (see dedicated section below)
 - start at an intersection point
 - choose a cell that contributes to this point (cannot be the current cell) and find the other intersection point that includes this cell. as said before, there can only be at most another one:
     * if there is another one: just go to this one
-    * if there isn't: we can't exactly use the other cell, as that could cause going backwards. **WILL THEREFORE IGNORE THIS CASE**, since 1. a case where circles exactly touch should never happen and 2. even if it does this is going to be a >3 point intersection, meaning two intersection points will actually get registered (ex ABCD intersection, A touches C in exactly one point, yet there will still be intersection points ABC and ACD)
-- choose which cell to go to next: should rotate in a fixed way, say clockwise, for easier computation later. to get the direction, compare the angle to the intersection point with the angles to the related cells. Assuming cells have a weight above zero, the angles should not be zero. Follow along the line made with the other cell that makes a clockwise rotation, meaning (angle_to_point-angle_to_cell) mod 180 < 180.
+    * if there isn't: we can't exactly use the other cell, as that could cause going backwards. **WILL THEREFORE IGNORE THIS CASE**, since 1. a case where circles exactly touch should never happen (especially since cases with 0 and 1 intersection points are treated the same way, see below) and 2. even if it does this is going to be a >3 point intersection, meaning two intersection points will actually get registered (ex ABCD intersection, A touches C in exactly one point, yet there will still be intersection points ABC and ACD)
+- choose which cell to go to next: should rotate in a fixed way, say clockwise, for easier computation later. to get the direction, compare the angle to the intersection point with the angles to the related cells. Assuming cells have a weight above zero, the angles should not be zero. Follow along the line made with the other cell that makes a clockwise rotation, meaning (angle_to_point-angle_to_cell) mod 180 < 180. **update: do not do that**, say the current intersection is around A and with B and C, coming from B, go to the other intersection with A and C. There could be multiple in case of an incut circle, see below.
 - two cases here: either this is just drawing an undisturbed part of the circle, or this is an incut circle (or line: compare the weights, see if this is the highest weight among all neighbors - precalculate this, be careful of floating points errors and use an index):
     * drawing circle: draw the line using points (see below), the arc is between this intersection point and the next. be careful about 360deg rotations.
     * incut: draw a series of lines until getting back to the main circle, since there could by multiple incuts merged together. repeat:
-        - since we know we are rotating clockwise, we should target the next intersection point accordingly. find the one that is the maximum angle difference (other_angle-current_angle) that is below zero, angles are computed from the intersection point relative to the center of the circle made with the incutting cell. this should give the other end of the arc between the current and other cells. (late edit, to check if that is the case: might need to change the ordering if the incutting cell is not the current cell)
+        - since we know we are rotating clockwise, we should target the next intersection point accordingly. find the one that is the maximum angle difference (other_angle-current_angle) that is below zero, angles are computed from the intersection point relative to the center of the circle made with the incutting cell. this should give the other end of the arc between the current and other cells.
         - draw the arc
         - if the arc ends in an intersection that includes the current cell as a neighbor, exit this inner loop, since this means we reached the current circle again.
-- stop when reaching the same point (index, or compare two related neighbors (?))
+- stop when reaching the same point (index inside the list of intersections, can't use the data inside since there might be duplicates)
 
 add a bunch of points along every added line, which should not include any intersections. in the case of a straight line, add only two points
 at the end (and after the grid snapping), remove duplicate points
@@ -79,8 +76,9 @@ First iteration, to find if a cell is neighboring another cell, algorithm simila
 Optimisation thoughts:
 the only way two cells are not neighbors is if there are cells blocking the way, or at the very least one cell blocking it.
 What it means for a cell to "block the way" is "cover" a part of the edge circle. For it to cover it, it has to collide with it. It is therefore possible to at least reduce the number of computations, while still being in O(n^3), by filtering the circles that collide with the first circle. Realistically, this will be something like O(5n^2) for a "normal/balanced" diagram.
+Update: this optimisation will not really be useful in practice
 
-**Update: this second case will not work**
+**Update: the second case above will not work**
 
 Example: small circle surrounded by a larger cell, with no intersections between the circles, but which still prevents it from reaching the other second cell.
 
@@ -136,8 +134,16 @@ just draw a circle
 ### Handling bounds
 compute intersections with the bounds (circle to line or line to line)
 
+todo: check how this was done in the first version with no weights
+
 ### Other thoughts
 
 Cache the calculated edges for later, to reuse them in different cells.
 Maybe do a first pass calculating all the required edges and adding them to a set, and then a second pass that calculates them all and computes all the final polygons at once?
 As a result, there will be no "gaps" between cells, and the grid system solution can be discarded
+
+In the same way, cache all the circles etc computations, since they will be reused multiple times but should not change during the calculations
+
+Also cache all angles to all points that are included as neighbors with the intersection points, if end up using them. Generally, try to cache as many things as possible, re-read the code once it is working to find some.
+
+Use previous results for neighbors computation: filter out non-neighbors of A as values for P inside the double for loop
