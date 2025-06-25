@@ -1,5 +1,7 @@
 taking rough notes so I don't forget
 
+    # todo: cache circle intersections etc at first
+
 ### Need to create polygons
 will use an approximation for the circles.
 cannot simply use circles intersection points, since e.g:

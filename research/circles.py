@@ -8,6 +8,16 @@ from random import seed, randint
 from point import Point
 from block_manager import StraightBlockManager, CircleBlockManager
 
+def gen_points(n: int = 4):
+    global points, colors
+
+    points = []
+    colors = []
+
+    for i in range(n):
+        points.append(Point(v2(randint(0, W-1), randint(0, H-1)),
+                           randint(10, 30)*.1, i, font))
+        colors.append(tuple(randint(127, 255) for _ in range(3)))
 
 smol = 1e-9
 
@@ -19,19 +29,10 @@ clock = pygame.time.Clock()
 font = pygame.font.SysFont('consolas', 16)
 
 points: list[Point] = []
+colors: list[tuple] = []
 
-pos = [v2(100, 400), v2(300, 50), v2(400, 250), v2(280, 150)]
-weights = [1, .884, 2, 1.2]
-pos[2].x += 100
-weights[2] += 2
-#pos = [v2(100, 400), v2(300, 50), v2(400, 250)]
-#weights = [1, 3, 1]
-for i, (p, w) in enumerate(zip(pos, weights)):
-    points.append(Point(p, w, i, font))
-del pos, weights
-
-colors = [[randint(127, 255) for _ in range(3)] for _ in range(len(points))]
-
+seed(0)
+gen_points()
 
 def get_dot(A: v2, B: v2):
     return A.x*B.x + A.y*B.y

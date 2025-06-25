@@ -173,18 +173,18 @@ def cut_circle_circle(A: Cell, P: Cell, circle1: Circle,
     return manager.is_blocked
 
 
-def is_neighbor(points: list[Cell], i: int, j: int) -> bool:
+def is_neighbor(cells: list[Cell], i: int, j: int) -> bool:
     """
-    Checks if the cells inside points at indices i and j are neighbors
+    Checks if the cells inside cells at indices i and j are neighbors
     """
-    A, B = points[i], points[j]
+    A, B = cells[i], cells[j]
 
     # base edge is a line
     if abs(A.weight - B.weight) < smol:
         line1 = perp_bisector(A.pos, B.pos)
         manager = StraightBlockManager(-1e6, 1e6)
 
-        for k, P in enumerate(points):
+        for k, P in enumerate(cells):
             if i == k or j == k:
                 continue
 
@@ -205,10 +205,10 @@ def is_neighbor(points: list[Cell], i: int, j: int) -> bool:
         if A.weight < B.weight:
             A, B = B, A
 
-        circle1 = get_circle(A, A)
+        circle1 = get_circle(A, B)
         manager = CircleBlockManager()
 
-        for k, P in enumerate(points):
+        for k, P in enumerate(cells):
             if i == k or j == k:
                 continue
 

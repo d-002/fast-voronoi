@@ -10,23 +10,23 @@ smol = 1e-9
 ## Basic math utils
 
 
-def get_dist2(point: v2, pos: v2, weight: float = 1) -> float:
+def dot(A: v2, B: v2) -> float:
+    """
+    returns the dot product between two vectors
+    """
+
+    return A.x*B.x + A.y*B.y
+
+
+def get_dist2(a: v2, b: v2, weight: float = 1) -> float:
     """
     returns the weighted Euclidian distance between two points, squared
     """
 
-    dx = (point.x-pos.x) * weight
-    dy = (point.y-pos.y) * weight
+    dx = (a.x-b.x) * weight
+    dy = (a.y-b.y) * weight
 
     return dx*dx + dy*dy
-
-
-def dot(A: v2, B: v2) -> float:
-    """
-    returns the dot product between two vector
-    """
-
-    return A.x*B.x + A.y*B.y
 
 
 def get_closest_to_line(line: Line, P: v2) -> v2:
@@ -34,12 +34,10 @@ def get_closest_to_line(line: Line, P: v2) -> v2:
     returns the closest point to P that is inside the given line
     """
 
-    M = line.M
-    u = line.u
+    dap = v2(P.x-line.M.x, P.y-line.M.y)
+    t = line.u.x*dap.x + line.u.y*dap.y
 
-    dap = v2(P.x-M.x, P.y-M.y)
-    t = u.x*dap.x + u.y*dap.y
-    return v2(M.x + u.x*t, M.y + u.y*t)
+    return v2(line.M.x + line.u.x*t, line.M.y + line.u.y*t)
 
 
 def perp_bisector(A: v2, B: v2) -> Line:
@@ -132,6 +130,31 @@ def get_circle(A: Cell, B: Cell) -> Circle:
     Finds the circle defined from the intersection
     of two differently weighted cells
     """
+    xa, ya = A.pos.x, A.pos.y
+    xb, yb = B.pos.x, B.pos.y
+    wa2, wb2 = A.weight*A.weight, B.weight*B.weight
+
+    # x polynomial
+    a = wa2 - wb2
+    b_x = 2 * (xb*wb2 - xa*wa2)
+    c_x = wa2*xa*xa - wb2*xb*xb
+
+    # y polynomial
+    b_y = 2 * (yb*wb2 - ya*wa2)
+    c_y = wa2*ya*ya - wb2*yb*yb
+
+    # x circle equation
+    alpha_x = b_x / (2*a)
+    gamma_x = c_x/a - alpha_x*alpha_x
+
+    # y circle equation
+    alpha_y = b_y / (2*a)
+    gamma_y = c_y/a - alpha_y*alpha_y
+
+    r2 = -gamma_x-gamma_y
+    pos = v2(-alpha_x, -alpha_y)
+
+    return Circle(pos, r2)
 
     # cache some useful variables
     xa, ya = A.pos.x, A.pos.y
@@ -182,31 +205,31 @@ def circle_inter(ca: Circle, cb: Circle) -> list[v2]:
 
     # cache a few useful variables
     da, db = a2-a1, b1-b2
-    da2, db2 = da*da, db*db
 
     # avoid divisions by zero by computing either x or y first
     # the calculations are nearly the same, only a few variable changes to do
     x_first = abs(da) < abs(db)
     if x_first:
         da, db = -db, -da
-        a1, a2 = b1, b2
-        b1, b2 = a1, a2
+        a1, b1 = b1, a1
+        a2, b2 = b2, a2
 
     # cache more useful computations
     a12, b12 = a1*a1, b1*b1
     a22, b22 = a2*a2, b2*b2
+    da2 = da*da
 
     # find one component of the solutions with a quadratic equation
     rest = r1 - r2 + a22 - a12 + b22 - b12
-    a = 1 + da2/db2
-    b = -da*rest / db2 - 2*b1*da/db - 2*a1
-    c = rest*rest / (4*db2) + b1*rest/db + a12 + b12 - r1
+    a = 1 + db*db/da2
+    b = db*rest / da2 - 2*a1*db/da - 2*b1
+    c = rest*rest / (4*da2) - a1*rest/da + a12 + b12 - r1
 
     solutions = quadratic(a, b, c)
 
     # find the full 2D positions of the solutions
     if x_first:
-        return [v2(x, (2*da*x + rest) / (2*db)) for x in solutions]
+        return [v2(x, (2*db*x + rest) / (2*da)) for x in solutions]
     return [v2((2*db*y + rest) / (2*da), y) for y in solutions]
 
 
@@ -214,6 +237,28 @@ def circle_inter_line(line: Line, circle: Circle) -> list[v2]:
     """
     Computes the list of intersections between a line and a circle
     """
+    x0, y0 = line.M.x, line.M.y
+    xu, yu = line.u.x, line.u.y
+    xc, yc = circle.c
+    r2 = circle.r2  # todo: use a custom data structure for circle, to indicate the radius is squared already
+
+    # avoid divisions by zero
+    if abs(xu) < abs(yu):
+        a = 1 + xu*xu/(yu*yu)
+        b = (2*x0*xu - 2*xc*xu - 2*y0 * (xu*xu)/yu) / yu - 2*yc
+        c = x0*x0 + xc*xc + yc*yc - r2 - 2*xc*x0 + y0*xu/yu * (2*xc - 2*x0 + y0*xu/yu)
+
+        solutions = quadratic(a, b, c)
+
+        return [v2(x0 + (y-y0) / yu * xu, y) for y in solutions]
+
+    a = 1 + yu*yu/(xu*xu)
+    b = (2*y0*yu - 2*yc*yu - 2*x0 * (yu*yu)/xu) / xu - 2*xc
+    c = y0*y0 + xc*xc + yc*yc - r2 - 2*yc*y0 + x0*yu/xu * (2*yc - 2*y0 + x0*yu/xu)
+
+    solutions = quadratic(a, b, c)
+
+    return [v2(x, y0 + (x-x0) / xu * yu) for x in solutions]
 
     # cache a few useful variables
     x0, y0 = line.M
