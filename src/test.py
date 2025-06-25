@@ -12,7 +12,7 @@ from classes.v2 import v2
 from neighbors import is_neighbor
 
 
-def gen_cells(W: int, H: int, n: int = 4):
+def gen_cells(W: int, H: int, n: int = 10):
     global cells, colors
 
     cells = []
@@ -24,8 +24,11 @@ def gen_cells(W: int, H: int, n: int = 4):
         colors.append(tuple(randint(127, 255) for _ in range(3)))
 
     # zoom out to better see the full circles
+    zoom = .8
+    offset = .5 * (1-zoom)
     for c in cells:
-        c.pos = c.pos*.2 + v2(W*.4, H*.4)
+        c.pos = c.pos*zoom + v2(W, H) * offset
+        c.weight = 1
 
 
 seed(0)
@@ -50,7 +53,7 @@ def main(events):
 cells: list[Cell] = []
 colors: list[tuple] = []
 
-W, H, screen, font = init()
+W, H, screen, font = init(1280, 720)
 gen_cells(W, H)
 
 mainloop(main)

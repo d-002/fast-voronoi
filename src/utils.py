@@ -130,31 +130,6 @@ def get_circle(A: Cell, B: Cell) -> Circle:
     Finds the circle defined from the intersection
     of two differently weighted cells
     """
-    xa, ya = A.pos.x, A.pos.y
-    xb, yb = B.pos.x, B.pos.y
-    wa2, wb2 = A.weight*A.weight, B.weight*B.weight
-
-    # x polynomial
-    a = wa2 - wb2
-    b_x = 2 * (xb*wb2 - xa*wa2)
-    c_x = wa2*xa*xa - wb2*xb*xb
-
-    # y polynomial
-    b_y = 2 * (yb*wb2 - ya*wa2)
-    c_y = wa2*ya*ya - wb2*yb*yb
-
-    # x circle equation
-    alpha_x = b_x / (2*a)
-    gamma_x = c_x/a - alpha_x*alpha_x
-
-    # y circle equation
-    alpha_y = b_y / (2*a)
-    gamma_y = c_y/a - alpha_y*alpha_y
-
-    r2 = -gamma_x-gamma_y
-    pos = v2(-alpha_x, -alpha_y)
-
-    return Circle(pos, r2)
 
     # cache some useful variables
     xa, ya = A.pos.x, A.pos.y
@@ -237,28 +212,6 @@ def circle_inter_line(line: Line, circle: Circle) -> list[v2]:
     """
     Computes the list of intersections between a line and a circle
     """
-    x0, y0 = line.M.x, line.M.y
-    xu, yu = line.u.x, line.u.y
-    xc, yc = circle.c
-    r2 = circle.r2  # todo: use a custom data structure for circle, to indicate the radius is squared already
-
-    # avoid divisions by zero
-    if abs(xu) < abs(yu):
-        a = 1 + xu*xu/(yu*yu)
-        b = (2*x0*xu - 2*xc*xu - 2*y0 * (xu*xu)/yu) / yu - 2*yc
-        c = x0*x0 + xc*xc + yc*yc - r2 - 2*xc*x0 + y0*xu/yu * (2*xc - 2*x0 + y0*xu/yu)
-
-        solutions = quadratic(a, b, c)
-
-        return [v2(x0 + (y-y0) / yu * xu, y) for y in solutions]
-
-    a = 1 + yu*yu/(xu*xu)
-    b = (2*y0*yu - 2*yc*yu - 2*x0 * (yu*yu)/xu) / xu - 2*xc
-    c = y0*y0 + xc*xc + yc*yc - r2 - 2*yc*y0 + x0*yu/xu * (2*yc - 2*y0 + x0*yu/xu)
-
-    solutions = quadratic(a, b, c)
-
-    return [v2(x, y0 + (x-x0) / xu * yu) for x in solutions]
 
     # cache a few useful variables
     x0, y0 = line.M
