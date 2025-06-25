@@ -3,16 +3,21 @@ from utils import smol, perp_bisector, get_circle, get_equidistant, circle_inter
 from classes.cell import Cell
 from classes.intersection import Intersection
 
+from utils import closest_cell
+
 def find_intersections(cells: list[Cell], neighbors: list[list[int]]):
     intersections = []
 
     for i, A in enumerate(cells):
         for j in neighbors[i]:
+            if j < i:
+                continue
+
             B = cells[j]
             ab_is_line = abs(A.weight - B.weight) < smol
 
             for k in neighbors[j]:
-                if i == k:
+                if k <= i:
                     continue
                 if k not in neighbors[i]:
                     continue
@@ -30,20 +35,21 @@ def find_intersections(cells: list[Cell], neighbors: list[list[int]]):
                         inters = circle_inter_line(line, circle)
 
                 else:
-                    # need to have the AB circle centered around A
-                    A_, B_ = (B, A) if A.weight < B.weight else (A, B)
-
-                    if abs(A_.weight - P.weight) < smol:
-                        line = perp_bisector(A_.pos, P.pos)
-                        circle = get_circle(A_, B_)
+                    if abs(A.weight - P.weight) < smol:
+                        line = perp_bisector(A.pos, P.pos)
+                        circle = get_circle(A, B)
                         inters = circle_inter_line(line, circle)
                     else:
-                        circle1 = get_circle(A_, B_)
-                        circle2 = get_circle(A_, P)
+                        circle1 = get_circle(A, B)
+                        circle2 = get_circle(A, P)
                         inters = circle_inter(circle1, circle2)
 
                 if inters is not None:
                     for inter in inters:
+                        # check if the intersection is not blocked
+                        if closest_cell(cells, inter) not in (i, j, k):
+                            continue
+
                         intersections.append(Intersection(inter, A, B, P))
 
     return intersections

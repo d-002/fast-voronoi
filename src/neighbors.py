@@ -201,7 +201,11 @@ def is_neighbor(cells: list[Cell], i: int, j: int) -> bool:
     # base edge is a circle
     else:
 
-        # make sure the circle is centered around A
+        # make sure the circle is centered around A: first, so that the
+        # measured curvature is the one that is conditioned by the weight of
+        # the node that is inside the circle, and second, because other
+        # computations identify A as the node that is inside the circle for
+        # easier logic
         if A.weight < B.weight:
             A, B = B, A
 
