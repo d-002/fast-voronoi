@@ -20,7 +20,8 @@ def dot(A: v2, B: v2) -> float:
 
 def get_dist2(a: v2, b: v2, weight: float = 1) -> float:
     """
-    returns the weighted Euclidian distance between two points, squared
+    returns the squared, multiplicatively weighted Euclidian distance
+    between two points
     """
 
     dx = (a.x-b.x) * weight
@@ -28,6 +29,23 @@ def get_dist2(a: v2, b: v2, weight: float = 1) -> float:
 
     return dx*dx + dy*dy
 
+
+def closest_cell(cells: list[Cell], pos: v2) -> int:
+    """
+    returns the index of the closest cell to a point,
+    taking their weight into account
+    """
+
+    closest = None
+    closest_i = -1
+
+    for i, cell in enumerate(cells):
+        dist = get_dist2(cell.pos, pos, cell.weight)
+        if closest is None or dist < closest:
+            closest = dist
+            closest_i = i
+
+    return closest_i
 
 def get_closest_to_line(line: Line, P: v2) -> v2:
     """
@@ -229,13 +247,13 @@ def circle_inter_line(line: Line, circle: Circle) -> list[v2]:
 
     # cache more useful computations
     xu2, yu2 = xu*xu, yu*yu
-    x02 = x0*x0
+    y02 = y0*y0
     xc2, yc2 = xc*xc, yc*yc
 
     # find one component of the solutions with a quadratic equation
-    a = 1 + xu2/yu2
-    b = (2*x0*xu - 2*xc*xu - 2*y0 * xu2/yu) / yu - 2*yc
-    c = x02 + xc2 + yc2 - r2 - 2*xc*x0 + y0*xu/yu * (2*xc - 2*x0 + y0*xu/yu)
+    a = 1 + yu2/xu2
+    b = (2*y0*yu - 2*yc*yu - 2*x0 * yu2/xu) / xu - 2*xc
+    c = y02 + xc2 + yc2 - r2 - 2*yc*y0 + x0*yu/xu * (2*yc - 2*y0 + x0*yu/xu)
 
     solutions = quadratic(a, b, c)
 
