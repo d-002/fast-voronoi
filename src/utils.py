@@ -100,17 +100,22 @@ def get_equidistant(A: v2, B: v2, C: v2) -> v2|None:
     u, v = a.u, b.u
     M, N = a.M, b.M
 
-    # handle when A, B and C are aligned
+    # handle when A, B and C are aligned: no equidistant point
+    # (except in very rare scenarios that it is easier to ignore)
     if abs(u.x*v.y - u.y*v.x) < smol:
         return None
 
-    # handle divisions by zero with multiple definitions of t
+    # find t, or how far down one line the intersection point is
+    # multiple definitions of t exist: either how far down (a), or (b) t is
+    # this should help avoid divisions by zero (when dividing by v.x or v.y)
     if abs(v.x) < abs(v.y):
         mv = v.x/v.y
+
+        # another potential division by zero, however that should not happen
+        # either, since for div to be 0, u and v have to be colinear,
+        # which has already been checked above
         div = u.x - mv*u.y
 
-        # div shouldn't be zero,
-        # we checked that above with colinear vectors check
         t = (N.x - M.x + mv * (M.y-N.y)) / div
 
     else:
@@ -128,9 +133,13 @@ def get_circle(A: Cell, B: Cell) -> Circle:
     of two differently weighted cells
     """
 
+    # cache some useful variables
     xa, ya = A.pos.x, A.pos.y
     xb, yb = B.pos.x, B.pos.y
     wa2, wb2 = A.weight*A.weight, B.weight*B.weight
+
+    # first stage: find a set of polynomials, one for x and one for y,
+    # defining the boundary between the two cells
 
     # x polynomial
     a = wa2 - wb2
@@ -141,16 +150,22 @@ def get_circle(A: Cell, B: Cell) -> Circle:
     b_y = 2 * (yb*wb2 - ya*wa2)
     c_y = wa2*ya*ya - wb2*yb*yb
 
-    # x circle equation
+    # second stage: find the circle equation from these polynomials
+    # in the form of
+    # [(x-alpha_x)**2 + gamma_x] + [(y-alpha_y)**2 + gamma_y] = 0
+
+    # first part of this equation (the part with x)
     alpha_x = b_x / (2*a)
     gamma_x = c_x/a - alpha_x*alpha_x
 
-    # y circle equation
+    # second part (with y)
     alpha_y = b_y / (2*a)
     gamma_y = c_y/a - alpha_y*alpha_y
 
-    r2 = -gamma_x-gamma_y
+
+    # extract the circle center and squared radius from this circle equation
     pos = v2(-alpha_x, -alpha_y)
+    r2 = -gamma_x-gamma_y
 
     return Circle(pos, r2)
 
@@ -165,26 +180,33 @@ def circle_inter(ca: Circle, cb: Circle) -> list[v2]:
     r1, r2 = ca.r2, cb.r2
     a2, b2 = cb.c
 
+    # cache a few useful variables
     da, db = a2-a1, b1-b2
+    da2, db2 = da*da, db*db
 
-    # avoid divisions by zero
-    if abs(da) < abs(db):
-        rest = r1 - r2 + a2*a2 - a1*a1 + b2*b2 - b1*b1
-        a = 1 + da*da / (db*db)
-        b = -da*rest / (db*db) - 2*b1*da/db - 2*a1
-        c = rest*rest / (4*db*db) + b1*rest/db + a1*a1 + b1*b1 - r1
+    # avoid divisions by zero by computing either x or y first
+    # the calculations are nearly the same, only a few variable changes to do
+    x_first = abs(da) < abs(db)
+    if x_first:
+        da, db = -db, -da
+        a1, a2 = b1, b2
+        b1, b2 = a1, a2
 
-        solutions = quadratic(a, b, c)
+    # cache more useful computations
+    a12, b12 = a1*a1, b1*b1
+    a22, b22 = a2*a2, b2*b2
 
-        return [v2(x, (2*da*x - rest) / (2*db)) for x in solutions]
-
-    rest = r1 - r2 + a2*a2 - a1*a1 + b2*b2 - b1*b1
-    a = 1 + db*db / (da*da)
-    b = db*rest / (da*da) - 2*a1*db/da - 2*b1
-    c = rest*rest / (4*da*da) - a1*rest/da + a1*a1 + b1*b1 - r1
+    # find one component of the solutions with a quadratic equation
+    rest = r1 - r2 + a22 - a12 + b22 - b12
+    a = 1 + da2/db2
+    b = -da*rest / db2 - 2*b1*da/db - 2*a1
+    c = rest*rest / (4*db2) + b1*rest/db + a12 + b12 - r1
 
     solutions = quadratic(a, b, c)
 
+    # find the full 2D positions of the solutions
+    if x_first:
+        return [v2(x, (2*da*x + rest) / (2*db)) for x in solutions]
     return [v2((2*db*y + rest) / (2*da), y) for y in solutions]
 
 
@@ -193,25 +215,33 @@ def circle_inter_line(line: Line, circle: Circle) -> list[v2]:
     Computes the list of intersections between a line and a circle
     """
 
+    # cache a few useful variables
     x0, y0 = line.M
     xu, yu = line.u
     xc, yc = circle.c
     r2 = circle.r2
 
-    # avoid divisions by zero
-    if abs(xu) < abs(yu):
-        a = 1 + xu*xu/(yu*yu)
-        b = (2*x0*xu - 2*xc*xu - 2*y0 * (xu*xu)/yu) / yu - 2*yc
-        c = x0*x0 + xc*xc + yc*yc - r2 - 2*xc*x0 + y0*xu/yu * (2*xc - 2*x0 + y0*xu/yu)
+    # avoid divisions by zero by computing either x or y first
+    # the calculations are nearly the same, only a few variable changes to do
+    x_first = abs(xu) < abs(yu)
+    if x_first:
+        x0, y0 = y0, x0
+        xu, yu = yu, xu
+        xc, yc = yc, xc
 
-        solutions = quadratic(a, b, c)
+    # cache more useful computations
+    xu2, yu2 = xu*xu, yu*yu
+    x02 = x0*x0
+    xc2, yc2 = xc*xc, yc*yc
 
-        return [v2(x0 + (y-y0) / yu * xu, y) for y in solutions]
-
-    a = 1 + yu*yu/(xu*xu)
-    b = (2*y0*yu - 2*yc*yu - 2*x0 * (yu*yu)/xu) / xu - 2*xc
-    c = y0*y0 + xc*xc + yc*yc - r2 - 2*yc*y0 + x0*yu/xu * (2*yc - 2*y0 + x0*yu/xu)
+    # find one component of the solutions with a quadratic equation
+    a = 1 + xu2/yu2
+    b = (2*x0*xu - 2*xc*xu - 2*y0 * xu2/yu) / yu - 2*yc
+    c = x02 + xc2 + yc2 - r2 - 2*xc*x0 + y0*xu/yu * (2*xc - 2*x0 + y0*xu/yu)
 
     solutions = quadratic(a, b, c)
 
+    # find the full 2D positions of the solutions
+    if x_first:
+        return [v2(y0 + (y-x0) / xu * yu, y) for y in solutions]
     return [v2(x, y0 + (x-x0) / xu * yu) for x in solutions]
