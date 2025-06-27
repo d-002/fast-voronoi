@@ -12,12 +12,13 @@ def bad_voronoi(W: int, H: int, surf: pygame.Surface, points: list[Cell],
     """
 
     # draw cells
+    offset = step*.5
     for x in range(0, W, step):
         for y in range(0, H, step):
             min = -1
             mind = 0
 
-            pixel = v2(x+.5, y+.5)
+            pixel = v2(x+offset, y+offset)
             for i, point in enumerate(points):
                 d = get_dist2(point.pos, pixel, point.weight)
 
