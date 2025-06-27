@@ -60,6 +60,28 @@ def cells_intersections(bounds: Bounds, cells: list[Cell],
 
     return intersections
 
+def add_inter(bounds: Bounds, cells: list[Cell],
+              intersections: list[Intersection], inter: v2, component: int,
+              i: int, j: int, C: Cell):
+    """
+    Helper function, used to make several checks to an intersection point
+    before adding it to a list
+    """
+
+    # check if the intersection point is part of the cell
+    if closest_cell(cells, inter) not in (i, j):
+        return
+
+    # check if the intersection is inside the bounds
+    if component:
+        if not bounds.left <= inter.x <= bounds.right:
+            return
+    else:
+        if not bounds.top <= inter.y <= bounds.bottom:
+            return
+
+    intersections.append(Intersection(inter, {cells[i], cells[j], C}))
+
 def bounds_intersections(bounds: Bounds,
                         cells: list[Cell]) -> list[Intersection]:
 
@@ -67,6 +89,10 @@ def bounds_intersections(bounds: Bounds,
 
     # create fake cells for the intersection with the bounds
     fake_cells = [FakeCell() for _ in range(4)]
+
+    # cache some shorthand variables that help the code be smaller
+    sides = (bounds.left, bounds.right, bounds.top, bounds.bottom)
+    components = (0, 0, 1, 1)
 
     for i, A in enumerate(cells):
         for j, B in enumerate(cells):
@@ -77,8 +103,7 @@ def bounds_intersections(bounds: Bounds,
                 # find the intersection point of the two cells and the bounds
                 line = perp_bisector(A.pos, B.pos)
 
-                sides = (bounds.left, bounds.right, bounds.top, bounds.bottom)
-                for c, target, component in zip(range(4), sides, (0, 0, 1, 1)):
+                for c, target, component in zip(range(4), sides, components):
                     div = line.u[component]
                     if not div:
                         continue
@@ -87,23 +112,22 @@ def bounds_intersections(bounds: Bounds,
 
                     inter = line.M + line.u*t
 
-                    # check if the intersection point is part of the cell
-                    if closest_cell(cells, inter) not in (i, j):
-                        continue
-
-                    # check if the intersection is inside the bounds
-                    if component:
-                        if not bounds.left <= inter.x <= bounds.right:
-                            continue
-                    else:
-                        if not bounds.top <= inter.y <= bounds.bottom:
-                            continue
-
-                    intersections.append(
-                            Intersection(inter, {A, B, fake_cells[c]}))
+                    add_inter(bounds, cells, intersections, inter,
+                              component, i, j, fake_cells[c])
 
             else:
-                pass
+                circle = get_circle(A, B)
+
+                for c, (line, _), component in zip(
+                        range(4), bounds.lines, components):
+
+                    for inter in circle_inter_line(line, circle):
+                        # check if the intersection point is part of the cell
+                        if closest_cell(cells, inter) not in (i, j):
+                            continue
+
+                        add_inter(bounds, cells, intersections, inter,
+                                  component, i, j, fake_cells[c])
 
     # add the corner intersections
     for i, corner in enumerate(bounds.corners):
