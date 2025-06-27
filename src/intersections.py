@@ -1,11 +1,13 @@
 from utils import *
 
 from classes.cell import Cell
+from classes.bounds import Bounds
 from classes.intersection import Intersection
 
 from utils import closest_cell
 
-def find_intersections(cells: list[Cell], neighbors: list[list[int]]):
+def find_intersections(bounds: Bounds, cells: list[Cell],
+                       neighbors: list[list[int]]):
     intersections = []
 
     for i, A in enumerate(cells):
@@ -46,6 +48,10 @@ def find_intersections(cells: list[Cell], neighbors: list[list[int]]):
 
                 if inters is not None:
                     for inter in inters:
+                        # check if the intersection is in bounds
+                        if not bounds.is_inside(inter):
+                            continue
+
                         # check if the intersection is not blocked
                         if closest_cell(cells, inter) not in (i, j, k):
                             continue

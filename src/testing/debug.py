@@ -8,6 +8,7 @@ from neighbors import *
 from classes.cell import Cell
 from classes.line import Line
 from classes.circle import Circle
+from classes.bounds import Bounds
 from classes.block_manager import StraightBlockManager, CircleBlockManager
 
 def slp():
@@ -62,8 +63,8 @@ def show_circleblock(screen: pygame.Surface, circle: Circle,
                         pygame.Rect(list(circle.c-offset), list(offset*2)),
                         a1, a2)
 
-def debug_show_blocks(screen: pygame.Surface, cells: list[Cell],
-                      i: int, j: int):
+def debug_show_blocks(bounds: Bounds, screen: pygame.Surface,
+                      cells: list[Cell], i: int, j: int):
     A, B = cells[i], cells[j]
     draw_cell(screen, A, 0)
     draw_cell(screen, B, 1)
@@ -71,7 +72,7 @@ def debug_show_blocks(screen: pygame.Surface, cells: list[Cell],
 
     if abs(A.weight - B.weight) < smol:
         line1 = perp_bisector(A.pos, B.pos)
-        manager = StraightBlockManager(-1e6, 1e6)
+        manager = StraightBlockManager(line1, bounds)
 
         draw_line(screen, (0, 255, 0), line1)
 
@@ -110,8 +111,10 @@ def debug_show_blocks(screen: pygame.Surface, cells: list[Cell],
 
         circle1 = get_circle(A, B)
         manager = CircleBlockManager()
+        cut_circle_bounds(circle1, bounds, manager)
 
         draw_circle(screen, (0, 255, 0), circle1)
+        show_circleblock(screen, circle1, manager)
 
         pygame.display.flip()
         slp()
@@ -162,7 +165,9 @@ def debug_show_blocks(screen: pygame.Surface, cells: list[Cell],
                 if cut_circle_circle(A, P, circle1, manager):
                     pass
 
-def debug_show_all_blocks(screen: pygame.Surface, cells: list[Cell]):
+def debug_show_all_blocks(bounds: Bounds, screen: pygame.Surface,
+                          cells: list[Cell]):
+
     prev = pygame.Surface(screen.get_size())
     prev.blit(screen, (0, 0))
 
@@ -171,6 +176,6 @@ def debug_show_all_blocks(screen: pygame.Surface, cells: list[Cell]):
             if i == j:
                 continue
 
-            debug_show_blocks(screen, cells, i, j)
+            debug_show_blocks(bounds, screen, cells, i, j)
 
             screen.blit(prev, (0, 0))

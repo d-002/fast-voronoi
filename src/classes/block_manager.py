@@ -58,7 +58,7 @@ class StraightBlockManager(BlockManager):
         else:
             self.min, self.max = sorted(bounds[2:])
 
-    def merge_inner(self):
+    def merge_inner(self) -> bool:
         for i, block1 in enumerate(self.blocks):
             for j, block2 in enumerate(self.blocks):
                 if i == j:
@@ -94,7 +94,7 @@ class CircleBlockManager(BlockManager):
     def __init__(self):
         super().__init__()
 
-    def merge_inner(self):
+    def merge_inner(self) -> bool:
         for i, block1 in enumerate(self.blocks):
             for j, block2 in enumerate(self.blocks):
                 if i == j:

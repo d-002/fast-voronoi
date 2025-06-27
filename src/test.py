@@ -14,6 +14,8 @@ from classes.bounds import Bounds
 from neighbors import is_neighbor
 from intersections import find_intersections
 
+from testing.debug import debug_show_all_blocks
+
 
 seed(0)
 def update_back():
@@ -33,7 +35,7 @@ def gen_cells(W: int, H: int, n: int = 20):
         colors.append(tuple(randint(127, 255) for _ in range(3)))
 
     # zoom out to better see the full circles
-    zoom = .3
+    zoom = .8
     offset = .5 * (1-zoom)
     for cell in cells:
         cell.pos = cell.pos*zoom + v2(W, H) * offset
@@ -63,10 +65,11 @@ def refresh():
     for i in range(len(cells)):
         for j in range(i+1, len(cells)):
             if is_neighbor(bounds, cells, i, j):
+                pygame.draw.line(screen, (127, 127, 127), list(cells[i].pos), list(cells[j].pos))
                 neighbors[i].append(j)
                 neighbors[j].append(i)
 
-    intersections = find_intersections(cells, neighbors)
+    intersections = find_intersections(bounds, cells, neighbors)
     for inter in intersections:
         pygame.draw.circle(screen, (0, 0, 255), list(inter.pos), 3)
 
@@ -77,6 +80,8 @@ def refresh():
     pygame.draw.line(screen, (127, 127, 127), tl, bl)
     pygame.draw.line(screen, (127, 127, 127), bl, br)
     pygame.draw.line(screen, (127, 127, 127), tr, br)
+
+    debug_show_all_blocks(bounds, screen, cells)
 
     pygame.display.flip()
 

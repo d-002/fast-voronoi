@@ -9,6 +9,7 @@ from classes.bounds import Bounds
 from classes.circle import Circle
 from classes.block_manager import StraightBlockManager, CircleBlockManager
 
+
 def cut_line_line(A: Cell, B: Cell, P: Cell, line1: Line,
                   manager: StraightBlockManager) -> bool:
     """
@@ -83,25 +84,24 @@ def cut_line_circle(A: Cell, P: Cell, line1: Line,
     return manager.is_blocked
 
 
-def cut_circle_line(A: Cell, P: Cell, circle1: Circle,
-                    manager: CircleBlockManager) -> bool:
+def cut_circle_line_inner(circle: Circle, line: Line, towards_other: v2,
+                          manager:CircleBlockManager) -> bool:
     """
-    Computes how a circle edge between two cells A and B is affected by
-    another line edge.
-    Affects the given manager, but also returns True if the whole circle
-    gets blocked, False otherwise.
+    Inner part of the circle/line blocking algorithm, used to compute
+    intersection where the line is already known, for example with bounds.
+    towards_other: vector indicating which side of the line goes towards
+    the side that should be blocked.
     """
 
-    line2 = perp_bisector(A.pos, P.pos)
-    intersections = circle_inter_line(line2, circle1)
+    intersections = circle_inter_line(line, circle)
 
     if len(intersections) < 2:
         return False
 
     # block a part of the circle
 
-    da = intersections[0]-circle1.c
-    db = intersections[1]-circle1.c
+    da = intersections[0]-circle.c
+    db = intersections[1]-circle.c
     a_a = atan2(da.y, da.x)
     a_b = atan2(db.y, db.x)
 
@@ -113,14 +113,40 @@ def cut_circle_line(A: Cell, P: Cell, circle1: Circle,
 
     # create a test point in the arc between a_a and a_b
     a_mid = (a_a+a_b) / 2
-    test_point = line2.M + v2(cos(a_mid), sin(a_mid))
+    test_point = line.M + v2(cos(a_mid), sin(a_mid))
 
-    if dot(test_point-line2.M, P.pos-A.pos) > 0:
+    if dot(test_point-line.M, towards_other) > 0:
         manager.add_block((a_a, a_b))
     else:
         manager.add_block((a_b, a_a+tau))
 
     return manager.is_blocked
+
+
+def cut_circle_line(A: Cell, P: Cell, circle1: Circle,
+                    manager: CircleBlockManager) -> bool:
+    """
+    Computes how a circle edge between two cells A and B is affected by
+    another line edge.
+    Affects the given manager, but also returns True if the whole circle
+    gets blocked, False otherwise.
+    """
+
+    line2 = perp_bisector(A.pos, P.pos)
+
+    return cut_circle_line_inner(circle1, line2, P.pos-A.pos, manager)
+
+
+def cut_circle_bounds(circle: Circle, box: Bounds,
+                      manager: CircleBlockManager):
+
+        """
+        Use bounds to block some parts of the circle
+        from a circle block manager
+        """
+
+        for (line, u) in box.lines:
+            cut_circle_line_inner(circle, line, u, manager)
 
 
 def cut_circle_circle(A: Cell, P: Cell, circle1: Circle,
@@ -215,6 +241,7 @@ def is_neighbor(bounds: Bounds, cells: list[Cell], i: int, j: int) -> bool:
 
         circle1 = get_circle(A, B)
         manager = CircleBlockManager()
+        cut_circle_bounds(circle1, bounds, manager)
 
         for k, P in enumerate(cells):
             if i == k or j == k:
