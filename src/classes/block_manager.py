@@ -1,6 +1,9 @@
 from abc import abstractmethod
 from math import ceil, tau
 
+from classes.line import Line
+from classes.bounds import Bounds
+
 
 class BlockManager:
     def __init__(self):
@@ -30,11 +33,30 @@ class BlockManager:
 
 
 class StraightBlockManager(BlockManager):
-    def __init__(self, min, max):
+    def __init__(self, line: Line, box: Bounds):
         super().__init__()
 
-        self.min = min
-        self.max = max
+        # init bounds by taking the global bounds into account
+
+        bounds: list[float] = [0]*4
+
+        if line.u.x:
+            bounds[0] = (box.left-line.M.x) / line.u.x
+            bounds[1] = (box.right-line.M.x) / line.u.x
+        if line.u.y:
+            bounds[2] = (box.top-line.M.y) / line.u.y
+            bounds[3] = (box.bottom-line.M.y) / line.u.y
+
+        if line.u.x:
+            if line.u.y:
+                bounds.sort()
+
+                self.min = max(bounds[:2])
+                self.max = min(bounds[2:])
+            else:
+                self.min, self.max = sorted(bounds[:2])
+        else:
+            self.min, self.max = sorted(bounds[2:])
 
     def merge_inner(self):
         for i, block1 in enumerate(self.blocks):

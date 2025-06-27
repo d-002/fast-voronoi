@@ -1,4 +1,4 @@
-from utils import smol, perp_bisector, get_circle, get_equidistant, circle_inter_line, circle_inter
+from utils import *
 
 from classes.cell import Cell
 from classes.intersection import Intersection
@@ -17,7 +17,7 @@ def find_intersections(cells: list[Cell], neighbors: list[list[int]]):
             ab_is_line = abs(A.weight - B.weight) < smol
 
             for k in neighbors[j]:
-                if k <= i:
+                if k <= i or k < j:
                     continue
                 if k not in neighbors[i]:
                     continue
@@ -53,3 +53,5 @@ def find_intersections(cells: list[Cell], neighbors: list[list[int]]):
                         intersections.append(Intersection(inter, A, B, P))
 
     return intersections
+
+

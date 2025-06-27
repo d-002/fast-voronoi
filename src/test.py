@@ -9,9 +9,10 @@ from testing.bad_voronoi import bad_voronoi
 
 from classes.cell import Cell
 from classes.v2 import v2
+from classes.bounds import Bounds
 
 from neighbors import is_neighbor
-from build_bound import find_intersections
+from intersections import find_intersections
 
 
 seed(0)
@@ -19,7 +20,7 @@ def update_back():
     bad_voronoi(W, H, back, cells, colors, 4)
 
 
-def gen_cells(W: int, H: int, n: int = 4):
+def gen_cells(W: int, H: int, n: int = 20):
     global cells, cells_w, colors
 
     cells = []
@@ -59,13 +60,9 @@ def refresh():
         pygame.draw.circle(screen, (0, 0, 0), list(cell.pos), 5)
 
     neighbors = [[] for _ in range(len(cells))]
-    for i, A in enumerate(cells):
-
+    for i in range(len(cells)):
         for j in range(i+1, len(cells)):
-            B = cells[j]
-
-            if is_neighbor(cells, i, j):
-                pygame.draw.line(screen, (127, 127, 127), list(A.pos), list(B.pos))
+            if is_neighbor(bounds, cells, i, j):
                 neighbors[i].append(j)
                 neighbors[j].append(i)
 
@@ -73,9 +70,13 @@ def refresh():
     for inter in intersections:
         pygame.draw.circle(screen, (0, 0, 255), list(inter.pos), 3)
 
-        b = list(inter.pos)
-        for a in inter.cells:
-            pygame.draw.line(screen, (255, 0, 0), list(a.pos), b)
+    # draw bounds
+    tl, tr = (bounds.left, bounds.top), (bounds.right, bounds.top)
+    bl, br = (bounds.left, bounds.bottom), (bounds.right, bounds.bottom)
+    pygame.draw.line(screen, (127, 127, 127), tl, tr)
+    pygame.draw.line(screen, (127, 127, 127), tl, bl)
+    pygame.draw.line(screen, (127, 127, 127), bl, br)
+    pygame.draw.line(screen, (127, 127, 127), tr, br)
 
     pygame.display.flip()
 
@@ -111,7 +112,9 @@ colors: list[tuple] = []
 animate = False
 
 W, H, screen, font = init(1280, 720)
+bounds = Bounds(100, 100, W-200, H-200)
 back = pygame.Surface((W, H))
+
 gen_cells(W, H)
 refresh()
 

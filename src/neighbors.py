@@ -5,6 +5,7 @@ from utils import *
 from classes.v2 import v2
 from classes.cell import Cell
 from classes.line import Line
+from classes.bounds import Bounds
 from classes.circle import Circle
 from classes.block_manager import StraightBlockManager, CircleBlockManager
 
@@ -176,7 +177,7 @@ def cut_circle_circle(A: Cell, P: Cell, circle1: Circle,
     return manager.is_blocked
 
 
-def is_neighbor(cells: list[Cell], i: int, j: int) -> bool:
+def is_neighbor(bounds: Bounds, cells: list[Cell], i: int, j: int) -> bool:
     """
     Checks if the cells inside cells at indices i and j are neighbors
     """
@@ -185,7 +186,7 @@ def is_neighbor(cells: list[Cell], i: int, j: int) -> bool:
     # base edge is a line
     if abs(A.weight - B.weight) < smol:
         line1 = perp_bisector(A.pos, B.pos)
-        manager = StraightBlockManager(-1e6, 1e6)
+        manager = StraightBlockManager(line1, bounds)
 
         for k, P in enumerate(cells):
             if i == k or j == k:
