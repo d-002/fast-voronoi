@@ -11,12 +11,19 @@ class Bounds:
         self.bottom = y+h
         self.left = x
 
+        self.tl = v2(self.left, self.top)
+        self.tr = v2(self.right, self.top)
+        self.bl = v2(self.left, self.bottom)
+        self.br = v2(self.right, self.bottom)
+
+        self.corners = (self.tl, self.tr, self.bl, self.br)
+
         # set up line objects
         self.lines = [
-                (Line(v2(self.left, self.top), v2(1, 0)), v2(0, -1)),
-                (Line(v2(self.left, self.top), v2(0, 1)), v2(-1, 0)),
-                (Line(v2(self.right, self.top), v2(0, 1)), v2(1, 0)),
-                (Line(v2(self.left, self.bottom), v2(1, 0)), v2(0, 1))
+                (Line(self.tl, v2(1, 0)), v2(0, -1)),
+                (Line(self.tr, v2(0, 1)), v2(-1, 0)),
+                (Line(self.bl, v2(0, 1)), v2(1, 0)),
+                (Line(self.br, v2(1, 0)), v2(0, 1))
         ]
 
     def is_inside(self, pos: v2) -> bool:

@@ -75,12 +75,10 @@ def refresh():
         pygame.draw.circle(screen, (0, 0, 255), list(inter.pos), 3)
 
     # draw bounds
-    tl, tr = (bounds.left, bounds.top), (bounds.right, bounds.top)
-    bl, br = (bounds.left, bounds.bottom), (bounds.right, bounds.bottom)
-    pygame.draw.line(screen, (127, 127, 127), tl, tr)
-    pygame.draw.line(screen, (127, 127, 127), tl, bl)
-    pygame.draw.line(screen, (127, 127, 127), bl, br)
-    pygame.draw.line(screen, (127, 127, 127), tr, br)
+    pygame.draw.line(screen, (127, 127, 127), list(bounds.tl), list(bounds.tr))
+    pygame.draw.line(screen, (127, 127, 127), list(bounds.tl), list(bounds.bl))
+    pygame.draw.line(screen, (127, 127, 127), list(bounds.bl), list(bounds.br))
+    pygame.draw.line(screen, (127, 127, 127), list(bounds.tr), list(bounds.br))
 
     pygame.display.flip()
 

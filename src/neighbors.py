@@ -145,7 +145,7 @@ def cut_circle_bounds(circle: Circle, box: Bounds,
         from a circle block manager
         """
 
-        for (line, u) in box.lines:
+        for line, u in box.lines:
             cut_circle_line_inner(circle, line, u, manager)
 
 
