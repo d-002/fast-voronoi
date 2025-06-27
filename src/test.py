@@ -113,5 +113,6 @@ animate = False
 W, H, screen, font = init(1280, 720)
 back = pygame.Surface((W, H))
 gen_cells(W, H)
+refresh()
 
 mainloop(main)

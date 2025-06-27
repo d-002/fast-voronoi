@@ -63,8 +63,8 @@ def perp_bisector(A: v2, B: v2) -> Line:
 
     mid = (A+B) * .5
 
-    dist = 1 / sqrt(dx*dx + dy*dy)
-    u = v2(dy*dist, -dx*dist)
+    dist_inv = 1 / sqrt(dx*dx + dy*dy)
+    u = v2(dy*dist_inv, -dx*dist_inv)
 
     return Line(mid, u)
 

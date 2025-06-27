@@ -99,19 +99,22 @@ def cut_circle_line(A: Cell, P: Cell, circle1: Circle,
 
     # block a part of the circle
 
-    da = intersections[0]-A.pos
-    db = intersections[1]-A.pos
+    da = intersections[0]-circle1.c
+    db = intersections[1]-circle1.c
     a_a = atan2(da.y, da.x)
     a_b = atan2(db.y, db.x)
 
     if a_b < a_a:
         a_b += tau
 
-    # find which side of the circle is blocked by checking which
-    # intersection point, once rotated 90deg, is farthest into P
+    # find which side of the circle is blocked by checking which arc is
+    # farthest into P (dot product with vector from A to B is positive)
 
-    if get_t(line2, circle1.c + v2(-sin(a_a), cos(a_a))) > \
-            get_t(line2, circle1.c + v2(-sin(a_b), cos(a_b))):
+    # create a test point in the arc between a_a and a_b
+    a_mid = (a_a+a_b) / 2
+    test_point = line2.M + v2(cos(a_mid), sin(a_mid))
+
+    if dot(test_point-line2.M, P.pos-A.pos) > 0:
         manager.add_block((a_a, a_b))
     else:
         manager.add_block((a_b, a_a+tau))
