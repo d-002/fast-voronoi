@@ -6,7 +6,7 @@ from classes.intersection import Intersection
 
 from utils import closest_cell
 
-def find_intersections(bounds: Bounds, cells: list[Cell],
+def cells_intersections(bounds: Bounds, cells: list[Cell],
                        neighbors: list[list[int]]):
     intersections = []
 
@@ -60,4 +60,14 @@ def find_intersections(bounds: Bounds, cells: list[Cell],
 
     return intersections
 
+def bounds_intersections(bounds: Bounds,
+                        cells: list[Cell]) -> list[Intersection]:
+    intersections = []
 
+    return intersections
+
+def all_intersections(bounds: Bounds, cells: list[Cell],
+                      neighbors: list[list[int]]) -> list[Intersection]:
+
+    return cells_intersections(bounds, cells, neighbors) + \
+            bounds_intersections(bounds, cells)

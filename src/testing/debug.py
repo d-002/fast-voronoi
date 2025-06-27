@@ -91,15 +91,13 @@ def debug_show_blocks(bounds: Bounds, screen: pygame.Surface,
                 line2 = perp_bisector(A.pos, P.pos)
                 draw_line(screen, (255, 0, 0), line2)
 
-                if cut_line_line(A, B, P, line1, manager):
-                    pass
+                cut_line_line(A, B, P, line1, manager)
 
             else:
                 circle2 = get_circle(A, P)
                 draw_circle(screen, (255, 0, 0), circle2)
 
-                if cut_line_circle(A, P, line1, manager):
-                    pass
+                cut_line_circle(A, P, line1, manager)
 
             slp()
             show_straightblock(screen, line1, manager)
@@ -151,8 +149,7 @@ def debug_show_blocks(bounds: Bounds, screen: pygame.Surface,
                     test_point = line2.M + v2(cos(a_mid), sin(a_mid)) * 100
                     pygame.draw.circle(screen, (255, 0, 255), list(test_point), 5)
 
-                if cut_circle_line(A, P, circle1, manager):
-                    pass
+                cut_circle_line(A, P, circle1, manager)
 
                 slp()
                 show_circleblock(screen, circle1, manager)
@@ -162,8 +159,7 @@ def debug_show_blocks(bounds: Bounds, screen: pygame.Surface,
                 circle2 = get_circle(A, P)
                 draw_circle(screen, (255, 0, 0), circle2)
 
-                if cut_circle_circle(A, P, circle1, manager):
-                    pass
+                cut_circle_circle(A, P, circle1, manager)
 
 def debug_show_all_blocks(bounds: Bounds, screen: pygame.Surface,
                           cells: list[Cell]):

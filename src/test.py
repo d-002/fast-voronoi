@@ -12,7 +12,7 @@ from classes.v2 import v2
 from classes.bounds import Bounds
 
 from neighbors import is_neighbor
-from intersections import find_intersections
+from intersections import all_intersections
 
 from testing.debug import debug_show_all_blocks
 
@@ -30,12 +30,13 @@ def gen_cells(W: int, H: int, n: int = 20):
     colors = []
 
     for _ in range(n):
-        cells.append(Cell(v2(randint(0, W-1), randint(0, H-1)),
+        cells.append(Cell(v2(randint(margin, W-margin-1),
+                             randint(margin, H-margin-1)),
                            randint(10, 30)*.1))
         colors.append(tuple(randint(127, 255) for _ in range(3)))
 
     # zoom out to better see the full circles
-    zoom = .8
+    zoom = 1
     offset = .5 * (1-zoom)
     for cell in cells:
         cell.pos = cell.pos*zoom + v2(W, H) * offset
@@ -69,7 +70,7 @@ def refresh():
                 neighbors[i].append(j)
                 neighbors[j].append(i)
 
-    intersections = find_intersections(bounds, cells, neighbors)
+    intersections = all_intersections(bounds, cells, neighbors)
     for inter in intersections:
         pygame.draw.circle(screen, (0, 0, 255), list(inter.pos), 3)
 
@@ -80,8 +81,6 @@ def refresh():
     pygame.draw.line(screen, (127, 127, 127), tl, bl)
     pygame.draw.line(screen, (127, 127, 127), bl, br)
     pygame.draw.line(screen, (127, 127, 127), tr, br)
-
-    debug_show_all_blocks(bounds, screen, cells)
 
     pygame.display.flip()
 
@@ -116,8 +115,10 @@ colors: list[tuple] = []
 
 animate = False
 
+margin = 100
+
 W, H, screen, font = init(1280, 720)
-bounds = Bounds(100, 100, W-200, H-200)
+bounds = Bounds(margin, margin, W-margin*2, H-margin*2)
 back = pygame.Surface((W, H))
 
 gen_cells(W, H)
