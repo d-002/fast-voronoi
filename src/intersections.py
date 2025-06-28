@@ -91,8 +91,8 @@ def bounds_intersections(bounds: Bounds,
     fake_cells = [FakeCell() for _ in range(4)]
 
     # cache some shorthand variables that help the code be smaller
-    sides = (bounds.left, bounds.right, bounds.top, bounds.bottom)
-    components = (0, 0, 1, 1)
+    sides = (bounds.top, bounds.right, bounds.bottom, bounds.left)
+    components = (1, 0, 1, 0)
 
     for i, A in enumerate(cells):
         for j, B in enumerate(cells):

@@ -21,9 +21,9 @@ class Bounds:
         # set up line objects
         self.lines = [
                 (Line(self.tl, v2(1, 0)), v2(0, -1)),
-                (Line(self.tl, v2(0, 1)), v2(-1, 0)),
                 (Line(self.tr, v2(0, 1)), v2(1, 0)),
-                (Line(self.bl, v2(1, 0)), v2(0, 1))
+                (Line(self.bl, v2(1, 0)), v2(0, 1)),
+                (Line(self.tl, v2(0, 1)), v2(-1, 0))
         ]
 
     def is_inside(self, pos: v2) -> bool:

@@ -12,3 +12,6 @@ class FakeCell(Cell):
     """Used for bound points"""
     def __init__(self):
         super().__init__(v2(0, 0), 1)
+
+    def __repr__(self) -> str:
+        return 'FakeCell<>'
