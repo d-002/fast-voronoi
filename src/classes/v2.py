@@ -26,6 +26,10 @@ class v2:
         yield self.x
         yield self.y
 
+    def __eq__(self, other) -> bool:
+        """assuming other is also a v2"""
+        return self.x == other.x and self.y == other.y
+
     def dot(self) -> float:
         return self.x*self.x + self.y*self.y
 

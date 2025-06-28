@@ -139,7 +139,13 @@ def bounds_intersections(bounds: Bounds,
             corner, {cells[closest_cell(cells, corner)], c0, c1}))
 
 
-    return intersections
+    # remove duplicate intersections
+    final = []
+    for inter in intersections:
+        if inter not in final:
+            final.append(inter)
+
+    return final
 
 def all_intersections(bounds: Bounds, cells: list[Cell],
                       neighbors: list[list[int]]) -> list[Intersection]:
