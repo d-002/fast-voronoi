@@ -7,12 +7,13 @@ from math import cos
 from testing.base_pygame import init, mainloop
 from testing.bad_voronoi import bad_voronoi
 
-from classes.cell import Cell
 from classes.v2 import v2
+from classes.cell import Cell
 from classes.bounds import Bounds
 
 from neighbors import is_neighbor
 from intersections import all_intersections
+from polygons import make_polygons
 
 from testing.debug import debug_show_all_blocks
 
@@ -57,22 +58,38 @@ def refresh():
 
         update_back()
 
+    # background
     screen.blit(back, (0, 0))
 
+    # cell centers
     for cell in cells:
         pygame.draw.circle(screen, (0, 0, 0), list(cell.pos), 5)
 
+    # neighbor lines
     neighbors = [[] for _ in range(len(cells))]
     for i in range(len(cells)):
         for j in range(i+1, len(cells)):
             if is_neighbor(bounds, cells, i, j):
-                pygame.draw.line(screen, (127, 127, 127), list(cells[i].pos), list(cells[j].pos))
+                pygame.draw.line(screen, (0, 255, 0), list(cells[i].pos), list(cells[j].pos))
                 neighbors[i].append(j)
                 neighbors[j].append(i)
 
+    # intersection points
     intersections = all_intersections(bounds, cells, neighbors)
     for inter in intersections:
         pygame.draw.circle(screen, (0, 0, 255), list(inter.pos), 3)
+
+    # draw polygons
+    offset = 0
+    for polygon in make_polygons(bounds, cells):
+        center = sum(polygon, start=v2(0, 0))
+
+        for i in range(len(polygon)):
+            a, b = polygon[i-1], polygon[i]
+            a += (center-a).normalized()*offset
+            b += (center-b).normalized()*offset
+
+            pygame.draw.line(screen, (127, 127, 127), list(a), list(b))
 
     # draw bounds
     pygame.draw.line(screen, (127, 127, 127), list(bounds.tl), list(bounds.tr))

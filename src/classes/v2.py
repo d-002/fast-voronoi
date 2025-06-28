@@ -1,5 +1,6 @@
 from __future__ import annotations
 from typing import Generator
+from math import sqrt
 
 class v2:
     def __init__(self, x: float, y: float):
@@ -27,3 +28,9 @@ class v2:
 
     def dot(self) -> float:
         return self.x*self.x + self.y*self.y
+
+    def length(self) -> float:
+        return sqrt(self.x*self.x + self.y*self.y)
+
+    def normalized(self) -> v2:
+        return self * (1/self.length())

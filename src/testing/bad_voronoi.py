@@ -26,4 +26,7 @@ def bad_voronoi(W: int, H: int, surf: pygame.Surface, points: list[Cell],
                     min = i
                     mind = d
 
-            pygame.draw.rect(surf, colors[min], Rect(x, y, step, step))
+            # find and lighten the color
+            r, g, b = colors[min]
+            col = ((r+255) / 2, (g+255) / 2, (b+255) / 2)
+            pygame.draw.rect(surf, col, Rect(x, y, step, step))
