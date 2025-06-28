@@ -70,32 +70,33 @@ def refresh():
     for i in range(len(cells)):
         for j in range(i+1, len(cells)):
             if is_neighbor(bounds, cells, i, j):
-                pygame.draw.line(screen, (0, 255, 0), list(cells[i].pos), list(cells[j].pos))
+                #pygame.draw.line(screen, (0, 255, 0), list(cells[i].pos), list(cells[j].pos))
                 neighbors[i].append(j)
                 neighbors[j].append(i)
 
     # intersection points
-    intersections = all_intersections(bounds, cells, neighbors)
+    intersections, _ = all_intersections(bounds, cells, neighbors)
     for inter in intersections:
         pygame.draw.circle(screen, (0, 0, 255), list(inter.pos), 3)
 
     # draw polygons
-    offset = 0
-    for polygon in make_polygons(bounds, cells):
-        center = sum(polygon, start=v2(0, 0))
+    offset = 10
+    for group in make_polygons(bounds, cells):
+        for polygon in group:
+            center = sum(polygon, start=v2(0, 0)) * (1/len(polygon))
 
-        for i in range(len(polygon)):
-            a, b = polygon[i-1], polygon[i]
-            a += (center-a).normalized()*offset
-            b += (center-b).normalized()*offset
+            for i in range(len(polygon)):
+                a, b = polygon[i-1], polygon[i]
+                a += (center-a).normalized()*offset
+                b += (center-b).normalized()*offset
 
-            pygame.draw.line(screen, (127, 127, 127), list(a), list(b))
+                pygame.draw.line(screen, (127, 127, 127), list(a), list(b))
 
     # draw bounds
     pygame.draw.line(screen, (127, 127, 127), list(bounds.tl), list(bounds.tr))
-    pygame.draw.line(screen, (127, 127, 127), list(bounds.tl), list(bounds.bl))
-    pygame.draw.line(screen, (127, 127, 127), list(bounds.bl), list(bounds.br))
     pygame.draw.line(screen, (127, 127, 127), list(bounds.tr), list(bounds.br))
+    pygame.draw.line(screen, (127, 127, 127), list(bounds.bl), list(bounds.br))
+    pygame.draw.line(screen, (127, 127, 127), list(bounds.tl), list(bounds.bl))
 
     pygame.display.flip()
 
@@ -137,6 +138,7 @@ bounds = Bounds(margin, margin, W-margin*2, H-margin*2)
 back = pygame.Surface((W, H))
 
 gen_cells(W, H)
+bounds = Bounds(margin, margin-10, W-margin*2, H-margin*2)
 refresh()
 
 mainloop(main)

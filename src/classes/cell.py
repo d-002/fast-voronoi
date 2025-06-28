@@ -10,8 +10,9 @@ class Cell:
 
 class FakeCell(Cell):
     """Used for bound points"""
-    def __init__(self):
+    def __init__(self, name):
         super().__init__(v2(0, 0), 1)
+        self.name = name
 
     def __repr__(self) -> str:
-        return 'FakeCell<>'
+        return f'FakeCell<{self.name}>'

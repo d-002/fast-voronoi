@@ -13,10 +13,10 @@ class Bounds:
 
         self.tl = v2(self.left, self.top)
         self.tr = v2(self.right, self.top)
-        self.bl = v2(self.left, self.bottom)
         self.br = v2(self.right, self.bottom)
+        self.bl = v2(self.left, self.bottom)
 
-        self.corners = (self.tl, self.tr, self.bl, self.br)
+        self.corners = (self.tl, self.tr, self.br, self.bl)
 
         # set up line objects
         self.lines = [
