@@ -5,6 +5,7 @@ from classes.cell import Cell
 from classes.circle import Circle
 
 smol = 1e-9
+segments_density = .1
 
 
 ## Basic math utils

@@ -89,7 +89,8 @@ def bounds_intersections(bounds: Bounds, cells: list[Cell]
 
     # create fake cells for the intersection with the bounds
     names = ["top", "right", "bottom", "left"]
-    fake_cells = [FakeCell(names[i]) for i in range(4)]
+    fake_cells = [FakeCell(pos, names[i])
+                  for i, pos in zip(range(4), bounds.fake_pos)]
 
     # cache some shorthand variables that help the code be smaller
     sides = (bounds.top, bounds.right, bounds.bottom, bounds.left)

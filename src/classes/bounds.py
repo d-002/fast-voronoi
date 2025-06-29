@@ -26,6 +26,15 @@ class Bounds:
                 (Line(self.tl, v2(0, 1)), v2(-1, 0))
         ]
 
+        # set up positions for when creating fake cells
+        # move them out of the box a little to avoid issues
+        self.fake_pos = [
+            v2(x + w*.5, y - h*.5),
+            v2(x + w*1.5, y + h*.5),
+            v2(x + w*.5, y + h*1.5),
+            v2(x - w*.5, y + h*.5)
+        ]
+
     def is_inside(self, pos: v2) -> bool:
         return self.left <= pos.x <= self.right and \
                 self.top <= pos.y <= self.bottom

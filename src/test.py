@@ -15,7 +15,16 @@ from neighbors import is_neighbor
 from intersections import all_intersections
 from polygons import make_polygons
 
+from time import sleep
 from testing.debug import debug_show_all_blocks
+
+
+def slp(t):
+    sleep(t)
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT or event.type == KEYDOWN and event.key == pygame.K_ESCAPE:
+            pygame.quit()
+            exit()
 
 
 seed(0)
@@ -70,7 +79,9 @@ def refresh():
     for i in range(len(cells)):
         for j in range(i+1, len(cells)):
             if is_neighbor(bounds, cells, i, j):
-                #pygame.draw.line(screen, (0, 255, 0), list(cells[i].pos), list(cells[j].pos))
+                pygame.draw.line(screen, (0, 255, 0),
+                                 list(cells[i].pos),
+                                 list(cells[j].pos))
                 neighbors[i].append(j)
                 neighbors[j].append(i)
 
@@ -80,7 +91,8 @@ def refresh():
         pygame.draw.circle(screen, (0, 0, 255), list(inter.pos), 3)
 
     # draw polygons
-    offset = 10
+    ##### ANIMATION TO REMOVE
+    offset = 0
     for group in make_polygons(bounds, cells):
         for polygon in group:
             center = sum(polygon, start=v2(0, 0)) * (1/len(polygon))
@@ -91,12 +103,19 @@ def refresh():
                 b += (center-b).normalized()*offset
 
                 pygame.draw.line(screen, (127, 127, 127), list(a), list(b))
+                #r = 255 - 255*i//len(polygon)
+                #pygame.draw.line(screen, (r, 0, 255-r), list(a), list(b))
+                slp(.02)
+                pygame.display.flip()
+            slp(.2)
 
     # draw bounds
+    """
     pygame.draw.line(screen, (127, 127, 127), list(bounds.tl), list(bounds.tr))
     pygame.draw.line(screen, (127, 127, 127), list(bounds.tr), list(bounds.br))
     pygame.draw.line(screen, (127, 127, 127), list(bounds.bl), list(bounds.br))
     pygame.draw.line(screen, (127, 127, 127), list(bounds.tl), list(bounds.bl))
+    """
 
     pygame.display.flip()
 
