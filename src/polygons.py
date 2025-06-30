@@ -1,8 +1,8 @@
 from typing import cast
 
-from math import cos, sin, atan2, tau, sqrt, ceil
+from math import cos, sin, atan2, pi, tau, sqrt, ceil
 
-from utils import smol, segments_density, perp_bisector, get_circle
+from utils import smol, segments_density, dot, perp_bisector, get_circle
 
 from classes.v2 import v2
 from classes.cell import Cell, FakeCell
@@ -100,7 +100,7 @@ class Cache:
             if a1 < a2:
                 a1 += tau
 
-            # fix the angles ordering since we know we go counterclockwise
+            # fix the angles ordering since we know we go anticlockwise
             # around A and clockwise around B
             if A.weight > B.weight:
                 a2 += tau
@@ -112,8 +112,6 @@ class Cache:
             for k in range(0, N+1):
                 a = a1 + (a2-a1)*k/N
                 points.append(edge.c + v2(cos(a), sin(a))*radius)
-                #points.append(edge.c + v2(cos(a), sin(a))*radius + (B.pos-edge.c - v2(cos(a), sin(a))*radius).normalized()*10)
-                #points.append(edge.c + v2(cos(a), sin(a))*radius)
 
             return points
 
@@ -211,6 +209,7 @@ def find_start(cache: Cache, cells: list[Cell], m: int,
 
     A = cells[m]
 
+    i = to_visit[0]
     # start the polygon at some intersection point, avoiding points
     # that are part of an intersection with a cell of higher weight,
     # as the algorithm could get stuck
@@ -220,28 +219,136 @@ def find_start(cache: Cache, cells: list[Cell], m: int,
             map(lambda cell: cell.weight,
                 cache.intersections[j].cells.difference({A}))))
 
-    # find which way to go from this initial intersection
-    # we want to rotate in a fixed way (counterclockwise) for later,
-    # so choose the point that will help up do that
-    others = cache.intersections[i].cells.difference({A})
-    B = next(iter(others)) # default value to be safe
+    """
+    # There can be multiple intersection points with
+    # these exact other cells B1 and B2, so use the angles to them to find
+    # which cell to use as B. This will not work if A has a smaller weight
+    # than both B1 and B2, but assuming there are bounds (that induce straight
+    # edges, simulating an equal weight) and thanks to the previous i
+    # calculation it is guaranteed that this will not happen.
+    B1, B2 = cache.intersections[i].cells.difference({A})
 
+    # The target B cell is the one that is on the other side relative to the
+    # edge from i to next_i (calculated later). For it to 
+    d1, d2 = B1.pos-A.pos, B2.pos-A.pos
+    a1, a2 = atan2(d1.y, d1.x), atan2(d2.y, d2.x)
+    ai = cache.inter_angles[m][i]
+    a1, a2 = (a1-ai) % tau, (a2-ai) % tau
+
+    B = B1 if a1 < a2 else B2
+    """
+
+    # Find which way to go from this initial intersection. We want to rotate
+    # in a fixed way (anticlockwise) for later, so choose the point B that
+    # will help us do that.
+    i_pos = cache.intersections[i].pos
+    B1, B2 = cache.intersections[i].cells.difference({A})
+
+    # If B1 and B2 are separated by a line, their angular order, compared from
+    # the direction or this line, will necessarily match the ordering of their
+    # respective cells and will therefore define which cell to pick.
+    # An inversion happens depending on which way we are going (towards or away
+    # from B1/B2), careful about which way to use for the line direction vector
+    if abs(B1.weight - B2.weight) < smol:
+        d1, d2 = B1.pos-i_pos, B2.pos-i_pos
+        mid = (B1.pos+B2.pos)*.5
+        dir = i_pos - mid
+        if dot(dir, A.pos-mid) < 0:
+            dir *= -1
+
+        a1, a2 = atan2(d1.y, d1.x), atan2(d2.y, d2.x)
+        adir = atan2(dir.y, dir.x)
+        a1, a2 = (a1-adir) % tau, (a2-adir) % tau
+
+        B = B1 if a1 > a2 else B2
+
+    # If the two other cells are of different weights, get the cell with the
+    # larger weight and check whether the center of its circle edge with A (or
+    # the point itself if a line edge) is on the correct side for defining the
+    # current edge. This can be easily calculated with an angle difference.
+    else:
+        B = B1 if B1.weight > B2.weight else B2
+
+        if type(B) == FakeCell or abs(A.weight - B.weight) < smol:
+            point = B.pos
+        else:
+            edge = cast(Circle,
+                        cache.edge_objects[m][cache.all_cells.index(B)])
+            point = edge.c if B.weight > A.weight else A.pos*2 - edge.c
+
+        # getting the angle from A.pos instead of the center of the circle for
+        # example, but should not matter as this center, A.pos and point should
+        # be aligned
+        u = point-A.pos
+        ai = cache.inter_angles[m][i]
+        if (atan2(u.y, u.x)-ai) % tau > pi:
+            B = B2 if B == B1 else B1
+
+    # if the biggest cell out of the three, the logic switches since inside and
+    # outside are switched, as well as the target "rotation" direction
+    if A.weight < B1.weight and A.weight < B2.weight:
+        B = B2 if B == B1 else B1
+
+    """
+    # If all three cells have the same weight, there is only one intersection
+    # point with all three of them. Pick the cell that is on the left of the
+    # intersection point to go to next, as we know we rotate anticlockwise.
+    if abs(A.weight - B1.weight) < smol and abs(A.weight - B2.weight) < smol:
+        d1, d2 = B1.pos-i_pos, B2.pos-i_pos
+        a1, a2 = atan2(d1.y, d1.x), atan2(d2.y, d2.x)
+        aa = cache.inter_angles[m][i]+pi
+        a1, a2 = (a1-aa) % tau, (a2-aa) % tau
+
+        B = B1 if a1 > a2 else B2
+
+    # If the two other cells that are part of the intersection are of different
+    # weight than A, then there can be multiple intersection points with them.
+    # Get the other cell with the larger weight and check whether the center
+    # of the intersection circle with it (or the cell point itself if a
+    # straight line) is on the correct side for defining the current edge.
+    # Assuming there are bounds (that induce straight edges) and thanks to the
+    # previous i calculation it is guaranteed that A is not of smaller weight
+    # than both B1 and B2, which would break the algorithm.
+    else:
+        B = B1 if B1.weight > B2.weight else B2
+
+        if type(B) == FakeCell or abs(A.weight - B.weight) < smol:
+            point = B.pos
+        else:
+            edge = cast(Circle,
+                        cache.edge_objects[m][cache.all_cells.index(B)])
+            point = edge.c if B.weight > A.weight else A.pos*2 - edge.c
+
+        # getting the angle from A.pos instead of the center of the circle for
+        # example, but should not matter as this center, A.pos and point should
+        # be aligned
+        u = point-A.pos
+        ai = cache.inter_angles[m][i]
+        print(B)
+        if (atan2(u.y, u.x)-ai) % tau > pi:
+            B = B2 if B == B1 else B1
+        print(A, B1, B2, B, point, ai, atan2(u.y, u.x)-ai)
+    """
+
+    """
     # special case for cells with two intersections points, or more generally
     # when the next point to be visited has the same neighbors: there, both of
     # them will have the same "score", and can't be compared reliably with the
     # algorithm at the end of this function. instead, find the cell that is
     # just to the right of the intersection point (since we are rotating
-    # counterclockwise) and use it as a next cell
-    use_special_algorithm = False
+    # anticlockwise) and use it as a next cell
+    alternate_algorithm = False
     if len(to_visit) == 2:
-        use_special_algorithm = True
+        alternate_algorithm = True
     elif A.weight > max([cells[j].weight for j in cache.neighbors[m]]):
         angles = cache.inter_angles[m]
         next_i = min(to_visit, key=lambda j: (angles[j]-angles[i]) % tau)
         next_others = cache.intersections[next_i].cells.difference({A})
-        use_special_algorithm = others == next_others
+        alternate_algorithm = others == next_others
 
-    if use_special_algorithm:
+    ##### TODO: improve this, what about when there is a line intersection?
+    ##### the wanted edge might not be to the left
+    if alternate_algorithm:
         min_angle = tau
         for B_ in others:
             u = B_.pos-A.pos
@@ -265,7 +372,7 @@ def find_start(cache: Cache, cells: list[Cell], m: int,
                             for j in cache.cells_inter[n]
                             if A in cache.intersections[j].cells and i != j)
 
-            # circle around A: go counterclockwise from the center of A
+            # circle around A: go anticlockwise from the center of A
             else:
                 angles = cache.inter_angles[m]
                 angle = min((angles[j]-angles[i]) % tau
@@ -275,6 +382,7 @@ def find_start(cache: Cache, cells: list[Cell], m: int,
             if angle < min_angle:
                 min_angle = angle
                 B = B_
+    """
 
     return i, B
 
@@ -313,7 +421,7 @@ def find_next(cache: Cache, cells: list[Cell], to_visit: list[int],
         angles = cache.inter_angles[cells.index(B)]
         return min(next_i, key=lambda j: (angles[i]-angles[j]) % tau)
 
-    # the circle is around A: go counterclockwise from the center of A
+    # the circle is around A: go anticlockwise from the center of A
     else:
         angles = cache.inter_angles[m]
         return min(next_i, key=lambda j: (angles[j]-angles[i]) % tau)

@@ -32,7 +32,7 @@ def update_back():
     bad_voronoi(W, H, back, cells, colors, 4)
 
 
-def gen_cells(W: int, H: int, n: int = 20):
+def gen_cells(W: int, H: int, n: int = 10):
     global cells, cells_w, colors
 
     cells = []
@@ -50,6 +50,9 @@ def gen_cells(W: int, H: int, n: int = 20):
     offset = .5 * (1-zoom)
     for cell in cells:
         cell.pos = cell.pos*zoom + v2(W, H) * offset
+
+        #cell.weight += (1-cell.weight)*.95
+        if cells.index(cell)%2: cell.weight = 1
 
         # for animating weights
         cells_w.append(cell.weight)
@@ -91,8 +94,7 @@ def refresh():
         pygame.draw.circle(screen, (0, 0, 255), list(inter.pos), 3)
 
     # draw polygons
-    ##### ANIMATION TO REMOVE
-    offset = 0
+    offset = 10
     for group in make_polygons(bounds, cells):
         for polygon in group:
             center = sum(polygon, start=v2(0, 0)) * (1/len(polygon))
@@ -102,9 +104,9 @@ def refresh():
                 a += (center-a).normalized()*offset
                 b += (center-b).normalized()*offset
 
-                pygame.draw.line(screen, (127, 127, 127), list(a), list(b))
-                #r = 255 - 255*i//len(polygon)
-                #pygame.draw.line(screen, (r, 0, 255-r), list(a), list(b))
+                #pygame.draw.line(screen, (127, 127, 127), list(a), list(b))
+                r = 255 - 255*i//len(polygon)
+                pygame.draw.line(screen, (r, 0, 255-r), list(a), list(b))
                 slp(.02)
                 pygame.display.flip()
             slp(.2)

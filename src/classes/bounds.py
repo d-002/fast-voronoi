@@ -29,10 +29,10 @@ class Bounds:
         # set up positions for when creating fake cells
         # move them out of the box a little to avoid issues
         self.fake_pos = [
-            v2(x + w*.5, y - h*.5),
-            v2(x + w*1.5, y + h*.5),
-            v2(x + w*.5, y + h*1.5),
-            v2(x - w*.5, y + h*.5)
+            v2(x + w*.5, y - h),
+            v2(x + w*2, y + h*.5),
+            v2(x + w*.5, y + h*2),
+            v2(x - w, y + h*.5)
         ]
 
     def is_inside(self, pos: v2) -> bool:
