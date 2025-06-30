@@ -100,11 +100,6 @@ class Cache:
             if a1 < a2:
                 a1 += tau
 
-            # fix the angles ordering since we know we go anticlockwise
-            # around A and clockwise around B
-            if A.weight > B.weight:
-                a2 += tau
-
             radius = sqrt(edge.r2)
             N = ceil(abs(a2-a1) * radius * segments_density)
 
@@ -137,8 +132,7 @@ class Cache:
         key = (j, i, m, n)
         if key in self.edge_cache:
             # the edge might be cached in a different order, reverse and use it
-            points = self.edge_cache[key]
-            points.reverse()
+            points = self.edge_cache[key][::-1]
 
             self.edge_cache[(i, j, m, n)] = points
             return points[:-1]
@@ -148,12 +142,16 @@ class Cache:
         self.edge_cache[(i, j, m, n)] = points
         return points[:-1]
 
-    def build_polygon(self, intersections: list[int], m: int) -> list[v2]:
+    def build_polygon(self, intersections: list[int],
+                      m: int, around: list[Cell]) -> list[v2]:
 
         """
         Merges cached polygon edges into a full polygon from:
         - a list of indices of intersections in self.intersections
         - the index of the cell we are building around
+        - a list of cells bordering each of the polygon edges
+        the list of cells starts with the cells bordering the edge between
+        the first and second intersection points in the given list
         """
 
         # create polygon
@@ -161,39 +159,36 @@ class Cache:
         A = self.cells[m]
 
         length = len(intersections)
-        for n in range(length):
+        for n, B in zip(range(length), around):
             i, j = intersections[n], intersections[(n+1) % length]
             inter1, inter2 = self.intersections[i], self.intersections[j]
 
-            # find the other cell that helped make the current edge
-            # it should be the furthest indent into the cell with the most
-            # weight out of the two, that is the one that is the closest to it
-            possible = inter1.cells.intersection(inter2.cells).difference({A})
+            # sometimes the wrong side of the edge is drawn, in this case swap
+            # the two intersection points
+            reverse = False
+            if type(B) != FakeCell and abs(A.weight - B.weight) > smol:
+                circle = cast(Circle,
+                              self.edge_objects[m][self.cells.index(B)])
 
-            min_dist = -1
-            # default value for lsp
-            B = next(iter(possible))
-            for B_ in possible:
-                if abs(A.weight < B_.weight) < smol:
-                    mid = (A.pos+B_.pos) * .5
-                else:
-                    edge = cast(Circle,
-                                self.edge_objects[m][self.all_cells.index(B_)])
-                    d1, d2 = inter1.pos-edge.c, inter2.pos-edge.c
-                    a1, a2 = atan2(d1.y, d1.x), atan2(d2.y, d2.x)
-                    amid = (a1+a2)*.5
-                    mid = edge.c + v2(cos(amid), sin(amid))*sqrt(edge.r2)
+                d1, d2 = inter1.pos-circle.c, inter2.pos-circle.c
+                a1, a2 = atan2(d1.y, d1.x), atan2(d2.y, d2.x)
+                if a1 < a2:
+                    a1 += tau
 
-                if A.weight < B_.weight:
-                    dist = get_dist2(B_.pos, mid)
-                else:
-                    dist = get_dist2(A.pos, mid)
+                amid = (a1+a2)*.5
+                mid1 = circle.c + v2(cos(amid), sin(amid))*sqrt(circle.r2)
+                mid2 = circle.c*2 - mid1
 
-                if min_dist == -1 or dist < min_dist:
-                    min_dist = dist
-                    B = B_
+                d1 = max(get_dist2(A.pos, mid1), get_dist2(B.pos, mid1))
+                d2 = max(get_dist2(A.pos, mid2), get_dist2(B.pos, mid2))
 
-            polygon += self.get_polygon_edge(i, j, A, B)
+                if d1 > d2:
+                    reverse = True
+
+            if reverse:
+                polygon += self.get_polygon_edge(j, i, A, B)[::-1]
+            else:
+                polygon += self.get_polygon_edge(i, j, A, B)
 
         # complete the polygon by going back to the start
         polygon.append(polygon[0])
@@ -251,6 +246,13 @@ def find_next(cache: Cache, cells: list[Cell], to_visit: list[int],
 
     # multiple intersection points
 
+    # all the points are in a straight line: pick the closest one
+    if abs(A.weight - B.weight) < smol:
+        return min(next_i, key=lambda j: get_dist2(
+            cache.intersections[i].pos, cache.intersections[j].pos))
+
+        #### TODO: don't go backwards from the line
+
     # the circle is around B: go clockwise from the center of B
     # need to check for B in cells because of cells.index below
     # (B could be a fake cell)
@@ -286,6 +288,8 @@ def make_polygons(bounds: Bounds, cells: list[Cell]) -> list[list[list[v2]]]:
         while to_visit:
             # a cell can be split into multiple parts, hence a list of polygons
             polygon = []
+            # build a list of the cells that were used to generate the edges
+            edges = []
 
             i = to_visit[0]
             B = next(iter(cache.intersections[i].cells.difference({A})))
@@ -293,6 +297,7 @@ def make_polygons(bounds: Bounds, cells: list[Cell]) -> list[list[list[v2]]]:
             while True:
                 to_visit.remove(i)
                 polygon.append(i)
+                edges.append(B)
 
                 i = find_next(cache, cells, to_visit, i, m, B)
 
@@ -303,6 +308,6 @@ def make_polygons(bounds: Bounds, cells: list[Cell]) -> list[list[list[v2]]]:
                 # update the other cell
                 B = next(iter(cache.intersections[i].cells.difference({A, B})))
 
-            polygons[m].append(cache.build_polygon(polygon, m))
+            polygons[m].append(cache.build_polygon(polygon, m, edges))
 
     return polygons
