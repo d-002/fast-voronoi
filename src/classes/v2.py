@@ -37,4 +37,7 @@ class v2:
         return sqrt(self.x*self.x + self.y*self.y)
 
     def normalized(self) -> v2:
-        return self * (1/self.length())
+        length = self.length()
+        if not length:
+            return v2(1, 0)
+        return self * (1/length)

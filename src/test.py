@@ -51,8 +51,7 @@ def gen_cells(W: int, H: int, n: int = 10):
     for cell in cells:
         cell.pos = cell.pos*zoom + v2(W, H) * offset
 
-        #cell.weight += (1-cell.weight)*.95
-        if cells.index(cell)%2: cell.weight = 1
+        cell.weight += (1-cell.weight)*.95
 
         # for animating weights
         cells_w.append(cell.weight)
@@ -121,7 +120,6 @@ def refresh():
 
     pygame.display.flip()
 
-
 def main(events):
     global animate
 
@@ -155,6 +153,8 @@ animate = False
 margin = 100
 
 W, H, screen, font = init(1280, 720)
+from polygons import a
+a(screen, font)
 bounds = Bounds(margin, margin, W-margin*2, H-margin*2)
 back = pygame.Surface((W, H))
 
