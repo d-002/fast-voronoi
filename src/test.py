@@ -6,6 +6,7 @@ from math import cos
 
 from testing.base_pygame import init, mainloop
 from testing.bad_voronoi import bad_voronoi
+from testing.rand_colors import rand_colors
 
 from classes.v2 import v2
 from classes.cell import Cell
@@ -27,13 +28,12 @@ def gen_cells(W: int, H: int, n: int = 20):
 
     cells = []
     cells_w = []
-    colors = []
+    colors = rand_colors(n)
 
     for _ in range(n):
         cells.append(Cell(v2(randint(margin, W-margin-1),
                              randint(margin, H-margin-1)),
                           randint(10, 30)*.1))
-        colors.append(tuple(randint(127, 255) for _ in range(3)))
 
     # zoom out to better see the full circles
     zoom = 1
