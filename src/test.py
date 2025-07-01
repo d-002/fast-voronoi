@@ -29,10 +29,10 @@ def slp(t):
 
 seed(0)
 def update_back():
-    bad_voronoi(W, H, back, cells, colors, 4)
+    pass#bad_voronoi(W, H, back, cells, colors, 4)
 
 
-def gen_cells(W: int, H: int, n: int = 10):
+def gen_cells(W: int, H: int, n: int = 20):
     global cells, cells_w, colors
 
     cells = []
@@ -51,7 +51,6 @@ def gen_cells(W: int, H: int, n: int = 10):
     for cell in cells:
         cell.pos = cell.pos*zoom + v2(W, H) * offset
 
-        cell.weight += (1-cell.weight)*.95
 
         # for animating weights
         cells_w.append(cell.weight)
@@ -93,7 +92,7 @@ def refresh():
         pygame.draw.circle(screen, (0, 0, 255), list(inter.pos), 3)
 
     # draw polygons
-    offset = 10
+    offset = 0
     for group in make_polygons(bounds, cells):
         for polygon in group:
             center = sum(polygon, start=v2(0, 0)) * (1/len(polygon))
@@ -106,9 +105,9 @@ def refresh():
                 #pygame.draw.line(screen, (127, 127, 127), list(a), list(b))
                 r = 255 - 255*i//len(polygon)
                 pygame.draw.line(screen, (r, 0, 255-r), list(a), list(b))
-                slp(.02)
-                pygame.display.flip()
-            slp(.2)
+                #slp(.02)
+                #pygame.display.flip()
+            #slp(.2)
 
     # draw bounds
     """
@@ -153,8 +152,6 @@ animate = False
 margin = 100
 
 W, H, screen, font = init(1280, 720)
-from polygons import a
-a(screen, font)
 bounds = Bounds(margin, margin, W-margin*2, H-margin*2)
 back = pygame.Surface((W, H))
 

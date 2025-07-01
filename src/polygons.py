@@ -15,12 +15,6 @@ from neighbors import is_neighbor
 from intersections import all_intersections
 
 
-import pygame
-def a(s, f):
-    global screen, font
-    screen, font = s, f
-
-
 class Cache:
     def __init__(self, bounds: Bounds, cells: list[Cell]):
         # intersections angles as seen from each of their related cells
@@ -87,7 +81,7 @@ class Cache:
         i0, i1 = self.intersections[i], self.intersections[j]
 
         # special case for borders: simply draw a straight line
-        if type(A) == FakeCell or type(B) == FakeCell or True:
+        if type(A) == FakeCell or type(B) == FakeCell:
             return [i0.pos, i1.pos]
 
         # normal cells
@@ -104,9 +98,13 @@ class Cache:
             a1 = atan2(d1.y, d1.x)
             a2 = atan2(d2.y, d2.x)
 
-            ##### drawing edges anticlockwise from the circle's center
-            if a2 < a1:
-                a2 += tau
+            # avoid modulo issues, and take case of the angle inversion
+            if A.weight > B.weight:
+                if a2 < a1:
+                    a2 += tau
+            else:
+                if a1 < a2:
+                    a1 += tau
 
             radius = sqrt(edge.r2)
             N = ceil(abs(a2-a1) * radius * segments_density)
@@ -371,8 +369,5 @@ def make_polygons(bounds: Bounds, cells: list[Cell]) -> list[list[list[v2]]]:
 
             # add polygon
             polygons[m].append(cache.build_polygon(points, m, other_cells))
-
-    for i, inter in enumerate(cache.intersections):
-        screen.blit(font.render(str(i), True, (0, 0, 0)), list(inter.pos+v2(10, 10)))
 
     return polygons
