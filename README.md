@@ -1,6 +1,9 @@
 # fast-voronoi
 Very fast (multiplicatively weighted) Voronoi diagram display
 
+> [!IMPORTANT]
+> This readme is outdated, stay tuned for updates
+
 3.7+
 
 ## Files defined here
