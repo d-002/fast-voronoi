@@ -15,21 +15,11 @@ from neighbors import is_neighbor
 from intersections import all_intersections
 from polygons import make_polygons
 
-from time import sleep
-from testing.debug import debug_show_all_blocks
-
-
-def slp(t):
-    sleep(t)
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT or event.type == KEYDOWN and event.key == pygame.K_ESCAPE:
-            pygame.quit()
-            exit()
-
-
 seed(0)
+
+
 def update_back():
-    pass#bad_voronoi(W, H, back, cells, colors, 4)
+    bad_voronoi(W, H, back, cells, colors, 4)
 
 
 def gen_cells(W: int, H: int, n: int = 20):
@@ -42,7 +32,7 @@ def gen_cells(W: int, H: int, n: int = 20):
     for _ in range(n):
         cells.append(Cell(v2(randint(margin, W-margin-1),
                              randint(margin, H-margin-1)),
-                           randint(10, 30)*.1))
+                          randint(10, 30)*.1))
         colors.append(tuple(randint(127, 255) for _ in range(3)))
 
     # zoom out to better see the full circles
@@ -71,23 +61,8 @@ def refresh():
     screen.blit(back, (0, 0))
 
     # draw polygons
-    offset = 0
     for m, polygon in make_polygons(bounds, cells):
-        center = sum(polygon, start=v2(0, 0)) * (1/len(polygon))
-
-        for i in range(len(polygon)):
-            a, b = polygon[i-1], polygon[i]
-            a += (center-a).normalized()*offset
-            b += (center-b).normalized()*offset
-
-            pygame.draw.line(screen, (127, 127, 127), list(a), list(b))
-            #r = 255 - 255*i//len(polygon)
-            #pygame.draw.line(screen, (r, 0, 255-r), list(a), list(b))
-            #slp(.02)
-            #pygame.display.flip()
-
         pygame.draw.polygon(screen, colors[m], [list(p) for p in polygon])
-        #slp(.2)
 
     # draw bounds
     pygame.draw.line(screen, (127, 127, 127), list(bounds.tl), list(bounds.tr))
@@ -117,6 +92,7 @@ def refresh():
 
     pygame.display.flip()
 
+
 def main(events):
     global animate
 
@@ -141,6 +117,7 @@ def main(events):
     if rerun or animate:
         refresh()
 
+
 cells: list[Cell] = []
 cells_w: list[float] = []
 colors: list[tuple] = []
@@ -154,7 +131,6 @@ bounds = Bounds(margin, margin, W-margin*2, H-margin*2)
 back = pygame.Surface((W, H))
 
 gen_cells(W, H)
-bounds = Bounds(margin, margin-10, W-margin*2, H-margin*2)
 refresh()
 
 mainloop(main)

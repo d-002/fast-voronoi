@@ -1,6 +1,7 @@
-from math import cos, sin, atan2, tau
+from math import cos, sin, atan2, tau, sqrt
 
-from utils import *
+from utils import smol, dot, get_t, get_closest_to_line, perp_bisector, \
+        get_equidistant, get_dist2, get_circle, circle_inter, circle_inter_line
 
 from classes.v2 import v2
 from classes.cell import Cell
@@ -85,7 +86,7 @@ def cut_line_circle(A: Cell, P: Cell, line1: Line,
 
 
 def cut_circle_line_inner(circle: Circle, line: Line, towards_other: v2,
-                          manager:CircleBlockManager) -> bool:
+                          manager: CircleBlockManager) -> bool:
     """
     Inner part of the circle/line blocking algorithm, used to compute
     intersection where the line is already known, for example with bounds.
@@ -139,18 +140,17 @@ def cut_circle_line(A: Cell, P: Cell, circle1: Circle,
 
 def cut_circle_bounds(circle: Circle, box: Bounds,
                       manager: CircleBlockManager):
+    """
+    Use bounds to block some parts of the circle
+    from a circle block manager
+    """
 
-        """
-        Use bounds to block some parts of the circle
-        from a circle block manager
-        """
-
-        for line, u in box.lines:
-            cut_circle_line_inner(circle, line, u, manager)
+    for line, u in box.lines:
+        cut_circle_line_inner(circle, line, u, manager)
 
 
 def cut_circle_circle(A: Cell, P: Cell, circle1: Circle,
-                    manager: CircleBlockManager) -> bool:
+                      manager: CircleBlockManager) -> bool:
     """
     Computes how a circle edge between two cells A and B is affected by
     another circle edge.

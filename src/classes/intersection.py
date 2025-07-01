@@ -1,6 +1,7 @@
 from classes.v2 import v2
 from classes.cell import Cell
 
+
 class Intersection:
     def __init__(self, pos: v2, cells: set[Cell]):
         self.pos = pos

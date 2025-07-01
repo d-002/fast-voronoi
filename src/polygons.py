@@ -2,7 +2,8 @@ from typing import cast
 
 from math import cos, sin, atan2, tau, sqrt, ceil
 
-from utils import smol, segments_density, dot, get_dist2, perp_bisector, get_circle
+from utils import smol, segments_density, dot, get_dist2, perp_bisector, \
+        get_circle
 
 from classes.v2 import v2
 from classes.cell import Cell, FakeCell
@@ -25,14 +26,14 @@ class Cache:
         self.cells_inter: list[list[int]]
         # list of neighbors for every cell
         self.neighbors: list[list[int]]
-        # correspondence between intersection points and related cells indices,
-        # and polygon points (needed since multiple edges can pass through
-        # two given intersection points, depending on which cells are at play)
-        # will be filled on demand
+        # Mapping between intersection points and related cells indices, and
+        # polygon points (needed since multiple edges can pass through two
+        # given intersection points, depending on which cells are at play).
+        # Will be filled on demand.
         self.edge_cache: dict[tuple[int, int, int, int], list[v2]] = {}
         # line or circle objects between cells
         # (some are duplicated, might improve that in the future)
-        self.edge_objects: list[dict[int, Line|Circle]]
+        self.edge_objects: list[dict[int, Line | Circle]]
 
         # get neighbor relations, cache edge objects
         self.neighbors = [[] for _ in range(len(cells))]
@@ -53,7 +54,7 @@ class Cache:
 
         # get the intersection points and the fake cells
         self.intersections, fake_cells = \
-                all_intersections(bounds, cells, self.neighbors)
+            all_intersections(bounds, cells, self.neighbors)
 
         self.cells = cells
         self.all_cells = cells+fake_cells
@@ -73,62 +74,58 @@ class Cache:
                 u = self.intersections[inter].pos - A.pos
                 self.inter_angles[i][inter] = atan2(u.y, u.x)
 
-    def gen_polygon_edge(self, i: int, j: int, A: Cell, B: Cell) -> list[v2]:
+    def gen_polygon_edge(self, i: int, j: int, m: int, n: int) -> list[v2]:
         """
-        Generates the data returned by self.get_polygon_edge when missing
+        Generates the data returned by self.get_polygon_edge when missing.
+        i, j: indices in self.intersections for the two ends of the edge
+        m, n: indices in self.cells * self.all_cells
         """
 
         i0, i1 = self.intersections[i], self.intersections[j]
 
-        # special case for borders: simply draw a straight line
-        if type(A) == FakeCell or type(B) == FakeCell:
+        A, B = self.cells[m], self.all_cells[n]
+
+        # special case for borders: same as when the cells weights are the same
+        if A is FakeCell or type(B) is FakeCell or \
+                abs(A.weight - B.weight) < smol:
+
             return [i0.pos, i1.pos]
 
-        # normal cells
+        # arc edges: approximate them with many points
+        circle = cast(Circle, self.edge_objects[m][n])
 
-        # find out the type of edge
-        edge = self.edge_objects[self.cells.index(A)][self.cells.index(B)]
+        # get angles from the circle center
+        d1, d2 = i0.pos-circle.c, i1.pos-circle.c
+        a1 = atan2(d1.y, d1.x)
+        a2 = atan2(d2.y, d2.x)
 
-        if type(edge) == Line:
-            return [i0.pos, i1.pos]
+        # avoid modulo issues, and take case of the angle inversion
+        if A.weight > B.weight:
+            if a2 < a1:
+                a2 += tau
+        else:
+            if a1 < a2:
+                a1 += tau
 
-        if type(edge) == Circle:
-            # get angles from the circle center
-            d1, d2 = i0.pos-edge.c, i1.pos-edge.c
-            a1 = atan2(d1.y, d1.x)
-            a2 = atan2(d2.y, d2.x)
+        radius = sqrt(circle.r2)
+        N = ceil(abs(a2-a1) * radius * segments_density)
 
-            # avoid modulo issues, and take case of the angle inversion
-            if A.weight > B.weight:
-                if a2 < a1:
-                    a2 += tau
-            else:
-                if a1 < a2:
-                    a1 += tau
+        points = []
+        for k in range(0, N+1):
+            a = a1 + (a2-a1)*k/N
+            points.append(circle.c + v2(cos(a), sin(a))*radius)
 
-            radius = sqrt(edge.r2)
-            N = ceil(abs(a2-a1) * radius * segments_density)
+        return points
 
-            points = []
-            for k in range(0, N+1):
-                a = a1 + (a2-a1)*k/N
-                points.append(edge.c + v2(cos(a), sin(a))*radius)
-
-            return points
-
-        return [] # should not happen, but let's please the lsp
-
-    def get_polygon_edge(self, i: int, j: int, A: Cell, B: Cell) -> list[v2]:
+    def get_polygon_edge(self, i: int, j: int, m: int, n: int) -> list[v2]:
         """
         Get the set of points to place between two edges when building a
         polygon out of them, using cached data
         i, j: indices for intersections in self.intersections
-        A, B: cells on both sides of the edge (explicitely given to avoid
-        issues with bounds, or places where on both intersections the cells are
-        the same three)
+        m, n: indices for cells in self.cells * self.all_cells on both sides of
+        the edge (given because there could be multiple edges using i and j)
         """
 
-        m, n = self.all_cells.index(A), self.all_cells.index(B)
         key = (i, j, m, n)
         if key in self.edge_cache:
             # remove the last element of the edge since it will be contained in
@@ -144,31 +141,30 @@ class Cache:
             return points[:-1]
 
         # generate new data when needed
-        points = self.gen_polygon_edge(i, j, A, B)
+        points = self.gen_polygon_edge(i, j, m, n)
         self.edge_cache[(i, j, m, n)] = points
         return points[:-1]
 
     def build_polygon(self, intersections: list[int],
-                      m: int, around: list[Cell]) -> list[v2]:
-
+                      m: int, around: list[int]) -> list[v2]:
         """
         Merges cached polygon edges into a full polygon from:
         - a list of indices of intersections in self.intersections
         - the index of the cell we are building around
-        - a list of cells bordering each of the polygon edges
-        the list of cells starts with the cells bordering the edge between
-        the first and second intersection points in the given list
+        - a list of cells indices in self.all_cells, bordering each of the
+        polygon edges
+        The list of cells starts with the cells bordering the edge between
+        the first and second intersection points in around.
         """
 
         # create polygon
         polygon = []
-        A = self.cells[m]
 
         length = len(intersections)
-        for n, B in zip(range(length), around):
-            i, j = intersections[n], intersections[(n+1) % length]
+        for index, n in zip(range(length), around):
+            i, j = intersections[index], intersections[(index+1) % length]
 
-            polygon += self.get_polygon_edge(i, j, A, B)
+            polygon += self.get_polygon_edge(i, j, m, n)
 
         # complete the polygon by going back to the start
         polygon.append(polygon[0])
@@ -199,7 +195,132 @@ class Cache:
         return points
 
 
-def make_polygons(bounds: Bounds, cells: list[Cell]) -> list[tuple[int, list[v2]]]:
+def edge_needs_swap(bounds: Bounds, cache: Cache, m: int, n: int,
+                    inter: list[int]) -> bool:
+    """
+    When creating a list of pairs for polygon building, it can happen that the
+    sorting is incorrect due to the modular nature of angle measures.
+    This ordering might be off by one, creating incorrect pairs of points.
+    For example, if two cells have edges from points A and B, and C and D, it
+    could happen that the algorithm thinks they are connected by B and C, and
+    D and A instead, causing lots of issues.
+    To recognize when this happens, find the midpoint of all the currently
+    defined edges and check if these points actually belong to an edge (they
+    are close to both cells). If they are not, return True, otherwise False.
+    False negatives could happen, so check all the edges instead of just one.
+    """
+
+    A, B = cache.cells[m], cache.cells[n]
+
+    if A.weight < B.weight:
+        inside, outside = B, A
+    else:
+        inside, outside = A, B
+
+    edge = cast(Circle, cache.edge_objects[m][n])
+
+    for i in range(0, len(inter), 2):
+        i1, i2 = inter[i], inter[i+1]
+
+        d1 = cache.intersections[i1].pos-edge.c
+        d2 = cache.intersections[i2].pos-edge.c
+        a1, a2 = atan2(d1.y, d1.x), atan2(d2.y, d2.x)
+
+        # the sorting is reversed depending on the weights, use the correct
+        # side of the circle
+        if inside == A:
+            if a2 < a1:
+                a2 += tau
+        else:
+            if a1 < a2:
+                a1 += tau
+
+        amid = (a1+a2) * .5
+
+        mid = edge.c + v2(cos(amid), sin(amid)) * sqrt(edge.r2)
+
+        # Sometimes only two cells appear, but the targeted mid point is
+        # outside the bounds. Need to swap in this case.
+        if not bounds.is_inside(mid):
+            return True
+
+        # check if the midpoint is next to the right cells
+        closest = A  # dummy value for lsp
+        closest_dist = -1
+
+        for cell in cache.cells:
+            if cell == inside:
+                continue
+
+            dist = get_dist2(cell.pos, mid, cell.weight)
+            if dist < closest_dist or closest_dist == -1:
+                closest_dist = dist
+                closest = cell
+
+        if closest != outside:
+            return True
+
+    return False
+
+
+def build_pairs(bounds: Bounds, cache: Cache, m: int, to_visit: list[int]
+                ) -> list[tuple[int, tuple[int, int]]]:
+    """
+    Creates a list of pairs of intersections that define the edge around a cell
+    of index m in cache.cells. Compute and return these pairs of intersections,
+    such that they are each composed of two points, with the first one being to
+    a predetermined "side" of the other one (namely to the right when looking
+    at both of them from the center of the current cell) for easier
+    computations later.
+    """
+
+    A = cache.cells[m]
+
+    # find the set of concerned neighboring cells, and the
+    # intersections they contribute in
+    neighbors: dict[int, list[int]] = {}
+    for i in to_visit:
+        for B in cache.intersections[i].cells.difference({A}):
+            n = cache.all_cells.index(B)
+
+            neighbors.setdefault(n, [])
+            neighbors[n].append(i)
+
+    # sort these intersections and split them into small edge sections
+    pairs = []
+
+    for n, inter in neighbors.items():
+        B = cache.all_cells[n]
+
+        edge_line = type(B) is FakeCell or abs(A.weight - B.weight) < smol
+
+        if edge_line:
+            # special case for lines: easy to sort, just use the rotated
+            # vector from A to cell and order by dot
+            u = B.pos - A.pos
+            u = v2(-u.y, u.x)
+            inter.sort(key=lambda i: dot(cache.intersections[i].pos, u))
+
+        elif A.weight > B.weight:
+            # sort anticlockwise when the circle is centered around A
+            inter.sort(key=lambda i: cache.inter_angles[m][i])
+        else:
+            # sort clockwise otherwise
+            inter.sort(key=lambda i: -cache.inter_angles[n][i])
+
+        # fix modulo issues to make sure the points are sorted correctly
+        if not edge_line:
+            if edge_needs_swap(bounds, cache, m, n, inter):
+                inter.append(inter.pop(0))
+
+        for i in range(0, len(inter), 2):
+            pairs.append((n, (inter[i], inter[i+1])))
+
+    return pairs
+
+
+def make_polygons(bounds: Bounds, cells: list[Cell]
+                  ) -> list[tuple[int, list[v2]]]:
     """
     Returns a list of tuples formed with an integer and a polygon.
     The integers refer to the index of the cell that created the polygon.
@@ -217,8 +338,8 @@ def make_polygons(bounds: Bounds, cells: list[Cell]) -> list[tuple[int, list[v2]
     polygons: list[tuple[int, list[v2]]]
     polygons = []
 
-    for m, A in enumerate(cells):
-        # intersection points that still need to be processed
+    for m in range(len(cells)):
+        # all the intersection points that need to be processed
         to_visit = list(cache.cells_inter[m])
 
         # some cells have no intersection points, draw a circle instead
@@ -226,117 +347,14 @@ def make_polygons(bounds: Bounds, cells: list[Cell]) -> list[tuple[int, list[v2]
             polygons.append((m, cache.build_circle(m)))
             continue
 
-        # find the set of concerned neighboring cells, and the
-        # intersections they contribute in
-        neighbors: dict[Cell, list[int]] = {}
-        for i in to_visit:
-            for B in cache.intersections[i].cells.difference({A}):
-                neighbors.setdefault(B, [])
-                neighbors[B].append(i)
-
-        # sort these intersections and split them into small edge sections
-        pairs: list[tuple[Cell, tuple[int, int]]] = []
-
-        for B, inter in neighbors.items():
-            edge_line = type(B) == FakeCell or \
-                    abs(A.weight - B.weight) < smol
-
-            if edge_line:
-                # special case for lines: easy to sort, just use the rotated
-                # vector from A to cell and order by dot
-                u = B.pos - A.pos
-                u = v2(-u.y, u.x)
-                inter.sort(key=lambda i: dot(cache.intersections[i].pos, u))
-
-            elif A.weight > B.weight:
-                # sort anticlockwise when the circle is centered around A
-                inter.sort(key=lambda i: cache.inter_angles[m][i])
-            else:
-                # sort clockwise otherwise
-                n = cells.index(B)
-                inter.sort(key=lambda i: -cache.inter_angles[n][i])
-
-            # The ordering might be offset by angle modulo stuff, fix it:
-            # find the midpoint of each of the currently defined intersection
-            # pairs, and if, for at least one of them, the cell outside of the
-            # circle is not among the closest to this point (aka this pair does
-            # not describe an edge between A and B), swap.
-            # Need to check all of the edges as, in case of a swap issue, some
-            # of the tested edges might still have a midpoint accessible to
-            # the cell on the outside of the circle, giving false negatives.
-            if not edge_line:
-                n = cells.index(B)
-                if A.weight < B.weight:
-                    inside, outside = B, A
-                else:
-                    inside, outside = A, B
-
-                edge = cast(Circle, cache.edge_objects[m][n])
-
-                ok = True
-                for i in range(0, len(inter), 2):
-                    i1, i2 = inter[i], inter[i+1]
-
-                    d1 = cache.intersections[i1].pos-edge.c
-                    d2 = cache.intersections[i2].pos-edge.c
-                    a1, a2 = atan2(d1.y, d1.x), atan2(d2.y, d2.x)
-
-                    # the sorting is reversed depending on the weights, use the
-                    # correct side of the circle
-                    if inside == A:
-                        if a2 < a1:
-                            a2 += tau
-                    else:
-                        if a1 < a2:
-                            a1 += tau
-
-                    amid = (a1+a2) * .5
-
-                    mid = edge.c + v2(cos(amid), sin(amid)) * sqrt(edge.r2)
-
-                    # Sometimes only two cells appear, but the targeted mid
-                    # point is outside the bounds. Need to swap in this case
-                    if bounds.is_inside(mid):
-                        closest = A # dummy value for lsp
-                        closest_dist = -1
-
-                        for cell in cells:
-                            if cell == inside:
-                                continue
-
-                            dist = get_dist2(cell.pos, mid, cell.weight)
-                            if dist < closest_dist or closest_dist == -1:
-                                closest_dist = dist
-                                closest = cell
-
-                        ok = closest == outside
-                    else:
-                        ok = False
-
-                    if not ok:
-                        break
-
-                if not ok:
-                    inter.append(inter.pop(0))
-
-            for i in range(0, len(inter), 2):
-                pairs.append((B, (inter[i], inter[i+1])))
-
-        # build small sections of the edge
-        pairs: list[tuple[Cell, tuple[int, int]]] = []
-        for B, inter in neighbors.items():
-            if len(inter) == 2:
-                pairs.append((B, (inter[0], inter[1])))
-            else:
-                for i in range(0, len(inter), 2):
-                    pairs.append((B, (inter[i], inter[i+1])))
+        pairs = build_pairs(bounds, cache, m, to_visit)
 
         while pairs:
             first_cell, (i, j) = pairs.pop()
-            # points forming the polygon
-            points = [i, j]
-            # corresponding neighboring cells used for the edges
-            other_cells = [first_cell]
+            # indices of intersection points forming the polygon
+            points: list[int] = [i, j]
+            # corresponding neighboring cells indices used for the edges
+            other_cells: list[int] = [first_cell]
 
             # Merge all of the sections together, stitching using equal
             # intersection points wherever possible. When no more changes are
@@ -346,14 +364,14 @@ def make_polygons(bounds: Bounds, cells: list[Cell]) -> list[tuple[int, list[v2]
                 changes = False
                 a, b = points[0], points[-1]
 
-                for index, (B, (i, j)) in enumerate(pairs):
+                for index, (n, (i, j)) in enumerate(pairs):
                     if j == a:
                         points.insert(0, i)
-                        other_cells.insert(0, B)
+                        other_cells.insert(0, n)
                         changes = True
                     elif i == b:
                         points.append(j)
-                        other_cells.append(B)
+                        other_cells.append(n)
                         changes = True
 
                     if changes:

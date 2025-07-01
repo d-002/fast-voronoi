@@ -1,15 +1,21 @@
 import pygame
 from pygame.locals import QUIT, KEYDOWN, K_ESCAPE
-clock = pygame.time.Clock()
 
-from math import sqrt
+from math import sqrt, cos, sin, atan2, tau
 
-from neighbors import *
+from utils import smol, perp_bisector, get_circle, circle_inter_line
+from neighbors import cut_line_line, cut_line_circle, cut_circle_line, \
+        cut_circle_circle, cut_circle_bounds
+
+from classes.v2 import v2
 from classes.cell import Cell
 from classes.line import Line
 from classes.circle import Circle
 from classes.bounds import Bounds
 from classes.block_manager import StraightBlockManager, CircleBlockManager
+
+clock = pygame.time.Clock()
+
 
 def slp():
     pygame.display.flip()
@@ -28,10 +34,12 @@ def slp():
 
             clock.tick(10)
 
+
 def draw_line(screen: pygame.Surface, color: tuple[int, int, int], line: Line):
     pygame.draw.line(screen, color,
                      list(line.M - line.u*100),
                      list(line.M + line.u*200))
+
 
 def draw_circle(screen: pygame.Surface, color: tuple[int, int, int],
                 circle: Circle):
@@ -39,9 +47,11 @@ def draw_circle(screen: pygame.Surface, color: tuple[int, int, int],
     pygame.draw.circle(screen, color, list(circle.c), sqrt(circle.r2),
                        width=1)
 
+
 def draw_cell(screen: pygame.Surface, cell: Cell, i: int):
     c = 63 * i + (i == 2)
     pygame.draw.circle(screen, (c, c, c), list(cell.pos), 7)
+
 
 def show_straightblock(screen: pygame.Surface, line: Line,
                        manager: StraightBlockManager):
@@ -49,6 +59,7 @@ def show_straightblock(screen: pygame.Surface, line: Line,
         pygame.draw.line(screen, (255, 127, 0),
                          list(line.M + line.u * start),
                          list(line.M + line.u * stop))
+
 
 def show_circleblock(screen: pygame.Surface, circle: Circle,
                      manager: CircleBlockManager):
@@ -62,6 +73,7 @@ def show_circleblock(screen: pygame.Surface, circle: Circle,
         pygame.draw.arc(screen, (255, 127, 0),
                         pygame.Rect(list(circle.c-offset), list(offset*2)),
                         a1, a2)
+
 
 def debug_show_blocks(bounds: Bounds, screen: pygame.Surface,
                       cells: list[Cell], i: int, j: int):
@@ -147,7 +159,8 @@ def debug_show_blocks(bounds: Bounds, screen: pygame.Surface,
 
                     a_mid = (a_a+a_b) / 2
                     test_point = line2.M + v2(cos(a_mid), sin(a_mid)) * 100
-                    pygame.draw.circle(screen, (255, 0, 255), list(test_point), 5)
+                    pygame.draw.circle(screen, (255, 0, 255), list(test_point),
+                                       5)
 
                 cut_circle_line(A, P, circle1, manager)
 
@@ -160,6 +173,7 @@ def debug_show_blocks(bounds: Bounds, screen: pygame.Surface,
                 draw_circle(screen, (255, 0, 0), circle2)
 
                 cut_circle_circle(A, P, circle1, manager)
+
 
 def debug_show_all_blocks(bounds: Bounds, screen: pygame.Surface,
                           cells: list[Cell]):
