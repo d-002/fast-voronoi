@@ -199,16 +199,23 @@ class Cache:
         return points
 
 
-def make_polygons(bounds: Bounds, cells: list[Cell]) -> list[list[list[v2]]]:
+def make_polygons(bounds: Bounds, cells: list[Cell]) -> list[tuple[int, list[v2]]]:
     """
-    Returns a list of groups of polygons, one group for every cell passed in
-    argument. What is meant by a "group" is that the area controlled by a cell
-    can be split in multiple distinct sections, hence why they are in a group.
+    Returns a list of tuples formed with an integer and a polygon.
+    The integers refer to the index of the cell that created the polygon.
     A "polygon" is a list of v2 objects, starting and ending on the same point.
+
+    There may be multiple polygons with the same index, as in a weighted
+    diagram a cell might be split in multiple distinct parts.
+    Additionally, a cell might be completely inside another cell, and form a
+    perfect circle. In this case, there is no way to accomodate for the "hole"
+    it makes in the larger cell. To accomodate for that, the returned list is
+    ordered so that the polygons for larger cells come first in the list.
     """
 
     cache = Cache(bounds, cells)
-    polygons: list[list[list[v2]]] = [[] for _ in range(len(cells))]
+    polygons: list[tuple[int, list[v2]]]
+    polygons = []
 
     for m, A in enumerate(cells):
         # intersection points that still need to be processed
@@ -216,7 +223,7 @@ def make_polygons(bounds: Bounds, cells: list[Cell]) -> list[list[list[v2]]]:
 
         # some cells have no intersection points, draw a circle instead
         if not to_visit:
-            polygons[m].append(cache.build_circle(m))
+            polygons.append((m, cache.build_circle(m)))
             continue
 
         # find the set of concerned neighboring cells, and the
@@ -357,6 +364,6 @@ def make_polygons(bounds: Bounds, cells: list[Cell]) -> list[list[list[v2]]]:
                     break
 
             # add polygon
-            polygons[m].append(cache.build_polygon(points, m, other_cells))
+            polygons.append((m, cache.build_polygon(points, m, other_cells)))
 
-    return sorted(polygons, key=lambda p: cells[polygons.index(p)].weight)
+    return sorted(polygons, key=lambda p: cells[p[0]].weight)

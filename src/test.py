@@ -51,7 +51,6 @@ def gen_cells(W: int, H: int, n: int = 20):
     for cell in cells:
         cell.pos = cell.pos*zoom + v2(W, H) * offset
 
-
         # for animating weights
         cells_w.append(cell.weight)
 
@@ -73,23 +72,22 @@ def refresh():
 
     # draw polygons
     offset = 0
-    for m, group in enumerate(make_polygons(bounds, cells)):
-        for polygon in group:
-            center = sum(polygon, start=v2(0, 0)) * (1/len(polygon))
+    for m, polygon in make_polygons(bounds, cells):
+        center = sum(polygon, start=v2(0, 0)) * (1/len(polygon))
 
-            for i in range(len(polygon)):
-                a, b = polygon[i-1], polygon[i]
-                a += (center-a).normalized()*offset
-                b += (center-b).normalized()*offset
+        for i in range(len(polygon)):
+            a, b = polygon[i-1], polygon[i]
+            a += (center-a).normalized()*offset
+            b += (center-b).normalized()*offset
 
-                pygame.draw.line(screen, (127, 127, 127), list(a), list(b))
-                #r = 255 - 255*i//len(polygon)
-                #pygame.draw.line(screen, (r, 0, 255-r), list(a), list(b))
-                #slp(.02)
-                #pygame.display.flip()
+            pygame.draw.line(screen, (127, 127, 127), list(a), list(b))
+            #r = 255 - 255*i//len(polygon)
+            #pygame.draw.line(screen, (r, 0, 255-r), list(a), list(b))
+            #slp(.02)
+            #pygame.display.flip()
 
-            pygame.draw.polygon(screen, colors[m], [list(p) for p in polygon])
-            #slp(.2)
+        pygame.draw.polygon(screen, colors[m], [list(p) for p in polygon])
+        #slp(.2)
 
     # draw bounds
     pygame.draw.line(screen, (127, 127, 127), list(bounds.tl), list(bounds.tr))
