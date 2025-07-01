@@ -76,7 +76,7 @@ plt.title(f'Benchmark for {args['name']} method ({
     'weighted' if args['weighted'] else 'non-weighted'}) (average over {
         n_tests} tests)')
 
-print(f'Running benchmark for{args['name']}...')
+print(f'Running benchmark for {args['name']}...')
 for n_cells in range(1, 21):
     w0, h0, w1, h1 = 640, 480, 1920, 1080#3840, 2160
     times = test_func(args['func'], w0, h0, w1, h1, 20, n_cells,

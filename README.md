@@ -44,37 +44,25 @@ This might be bad depending on how you intend to use this technique, but for low
 ## Performance
 
 Below is a comparison between the naive approach (iterate over all the pixels, then check the distance with all the cells) and the analytic approach.
-These times are in seconds, an average of 3 runs, executed on my computer with a 12th Gen Intel(R) Core(TM) i7-12700H (20) @ 4.70 GHz.
+These tests were executed on my computer with a 12th Gen Intel(R) Core(TM) i7-12700H (20) @ 4.70 GHz (and a NVIDIA GeForce RTX 4070 Max-Q / Mobile, although from monitoring its usage I do not think it was actually used that much, even when drawing the polygons on the Surface).
 
-For the naive approach, the pixels colors are added to a [Pygame Surface](), and for the analytical approach both the polygon creation time and display time (using Pygame polygons rendering) are taken into account for fairness.
+For the naive approach, the pixels colors were added to a [Pygame Surface](https://www.pygame.org/docs/ref/surface.html), and for the analytical approach both the polygon creation time and display time (using Pygame [polygons](https://www.pygame.org/docs/ref/draw.html#pygame.draw.polygon) rendering) are taken into account for fairness.
 
-These times are in seconds, an average of 3, run on my computer, only here for you to get a rough idea of the performance gain.  
-I'm giving 4 non-zero digits no matter the time it takes, so we can easily see which times are smaller.  
-The times for the current approach also include any eventual collision removal time, although I think this is too rare to have any impact and is just extra flex.
+On the left, the naive approach, and on the right, the analytic approach:
 
-> [!WARNING]
-> These are old benchmark results
-> 
-> Check the commit at which these were made (before adding POO and weights)  
-> I might add a release for this version as it is faster and you may not want the weights feature
+- Weighted:
 
-### 1 cell
-||32x32|640x480|1280x720|1920x1080|
-|-|-|-|-|-|
-|Naive approach|0.0006667|0.1420|0.4253|0.9464|
-|Current approach|**0**|**0**|**0**|**0** (yes)|
+<div align="center">
+    <img width="49%" src="https://github.com/d-002/fast-voronoi/blob/doc/images/benchmark-naive-weighted.png">
+    <img width="49%" src="https://github.com/d-002/fast-voronoi/blob/doc/images/benchmark-analytic-weighted.png">
+</div>
 
-### 10 cells
-||32x32|640x480|1280x720|1920x1080|
-|-|-|-|-|-|
-|Naive approach|**0.0009933**|0.361|1.079|2.405|
-|Current approach|0.001002|**0.001672**|**0.001678**|**0.001001**|
+- Non-weighted (the main difference for the naive approach is that two multiplications are saved):
 
-### 100 cells
-||32x32|640x480|1280x720|1920x1080|
-|-|-|-|-|-|
-|Naive approach|**0.008667**|2.446|7.343|16.59|
-|Current approach|1.4189|**1.5077**|**1.5340**|**1.5137**|
+<div align="center">
+    <img width="49%" src="https://github.com/d-002/fast-voronoi/blob/doc/images/benchmark-naive-non-weighted.png">
+    <img width="49%" src="https://github.com/d-002/fast-voronoi/blob/doc/images/benchmark-analytic-non-weighted.png">
+</div>
 
 The faster values are **bold** for each test.
 As you can see, the naive approach takes a lot more time when the screen size increases, while the current approach doesn't care and just increases rapidly when the number of cells increases.
