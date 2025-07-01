@@ -2,7 +2,7 @@
 Very fast (multiplicatively weighted) Voronoi diagram display.
 
 Requirements:
-Should run on Python 3.7+, only tested in Python 3.13.5
+Should run on Python 3.7+, only tested in Python 3.13.5.
 
 ## What are Voronoi diagrams?
 
@@ -12,15 +12,16 @@ As such, given a set of sites on a plane, each one has a corresponding Voronoi c
 
 Below is an example of a Voronoi diagram, with the sites as black dots and their cells as colored regions:
 
-![Non-weighted Voronoi diagram](https://github.com/d-002/fast-voronoi/blob/doc/images/non-weighted.png)
+![Non-weighted Voronoi diagram](https://github.com/d-002/fast-voronoi/blob/main/images/non-weighted.png)
 
 There are many ways to define the distance from a point $P=(x,y)$ to a site $S=(x_0,y_0)$, such as the Euclidian distance $(x-x_0)^2+(y-y_0)^2$.
-In the case of this distance equation, it is possible for distances to be multiplied by an arbitrary factor. This is called weighted Euclidian distance.
+In the case of this distance equation, it is possible for distances to be multiplied by an arbitrary factor.
+This is called weighted Euclidian distance.
 
 Applying this distance calculation to Voronoi diagrams has many side effects, such as making the boundary between cells curvy, sometimes even splitting them in multiple sections.
 Below is the same Voronoi diagram, except with varying weights for the distance calculations with the sites.
 
-![Weighted Voronoi diagram](https://github.com/d-002/fast-voronoi/blob/doc/images/weighted.png)
+![Weighted Voronoi diagram](https://github.com/d-002/fast-voronoi/blob/main/images/weighted.png)
 
 ## Motivation
 
@@ -46,23 +47,36 @@ This might be bad depending on how you intend to use this technique, but for low
 Below is a comparison between the naive approach (iterate over all the pixels, then check the distance with all the cells) and the analytic approach.
 These tests were executed on my computer with a 12th Gen Intel(R) Core(TM) i7-12700H (20) @ 4.70 GHz (and a NVIDIA GeForce RTX 4070 Max-Q / Mobile, although from monitoring its usage I do not think it was actually used that much, even when drawing the polygons on the Surface).
 
-For the naive approach, the pixels colors were added to a [Pygame Surface](https://www.pygame.org/docs/ref/surface.html), and for the analytical approach both the polygon creation time and display time (using Pygame [polygons](https://www.pygame.org/docs/ref/draw.html#pygame.draw.polygon) rendering) are taken into account for fairness.
+For the naive approach, the pixels colors were added to a [Pygame Surface](https://www.pygame.org/docs/ref/surface.html), and for the analytical approach both the polygon creation time and display time (using Pygame [polygons](https://www.pygame.org/main/ref/draw.html#pygame.draw.polygon) rendering) are taken into account for fairness.
 
 On the left, the naive approach, and on the right, the analytic approach:
 
 - Weighted:
 
 <div align="center">
-    <img width="49%" src="https://github.com/d-002/fast-voronoi/blob/doc/images/benchmark-naive-weighted.png">
-    <img width="49%" src="https://github.com/d-002/fast-voronoi/blob/doc/images/benchmark-analytic-weighted.png">
+    <img width="49%" src="https://github.com/d-002/fast-voronoi/blob/main/images/benchmark-naive-weighted.png">
+    <img width="49%" src="https://github.com/d-002/fast-voronoi/blob/main/images/benchmark-analytic-weighted.png">
 </div>
 
 - Non-weighted (the main difference for the naive approach is that two multiplications are saved):
 
 <div align="center">
-    <img width="49%" src="https://github.com/d-002/fast-voronoi/blob/doc/images/benchmark-naive-non-weighted.png">
-    <img width="49%" src="https://github.com/d-002/fast-voronoi/blob/doc/images/benchmark-analytic-non-weighted.png">
+    <img width="49%" src="https://github.com/d-002/fast-voronoi/blob/main/images/benchmark-naive-non-weighted.png">
+    <img width="49%" src="https://github.com/d-002/fast-voronoi/blob/main/images/benchmark-analytic-non-weighted.png">
 </div>
 
-The faster values are **bold** for each test.
-As you can see, the naive approach takes a lot more time when the screen size increases, while the current approach doesn't care and just increases rapidly when the number of cells increases.
+Since the naive approach ran much slower, fewer data points were taken and the results were averaged over less runs.
+
+Still this should not affect results too much, as it is noticeable that **the analytic method is about 240 times faster** than the naive approach for 20 cells, at 2K resolution.
+
+From graph reading is can be seen that the analytic approach processing time increases rapidly when the number of cells increase, namely about on the order of $O(n^3)$.
+However it remains almost unaffected by the screen resolution, as all the processing can be dispatched with just a few draw calls to the GPU, one per polygon.
+
+Regarding the naive approach, its time complexity increases linearly with respect to the number of cells, but it also spikes dramatically as the screen size increases.
+This correlates with the fact that the time complexity for this method also increases linearly with the number of pixels, that is, quadratically with the display size.
+
+Not to mention that this naive method is already way slower than the analytic approach even for small screen sizes (e.g. in 640x480p, .23s v. .000085s).
+Of course, this benchmark is affected greatly by my hardware, the tools inside Pygame, and the fact that this runs on Python, but the results should look the same in other CPU-side implementations.
+
+There are obvious ways to optimize this, this repo was just made as a proof of concept and to explore the math behind Voronoi diagrams.
+Some improvements could be to use parallelism, NumPy arrays and vector operations, but I will leave this as an exercise for anyone interested.
