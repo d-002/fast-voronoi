@@ -62,7 +62,7 @@ Here are some basic points to help with the use of the code:
     This file contains utilities to complete these tasks.
 
     - `neighbors.py`: while creating the polygons, finding out which cells are neighbors of a given cell proves to be useful.
-    This file is used in the polygon creation process, but it can be used externally to give further insight on the graph.
+    This file is used in the polygon creation process, but it can also be used externally to give further insights on the graph.
 
     - `test.py`: a Pygame graphical interface used for testing.
     This file shows a lot of debug information about a voronoi graph, and can be used as a kind of tutorial to see how the different useful functions behave.
@@ -116,13 +116,13 @@ Since the naive approach ran much slower, fewer data points were taken and the r
 
 Still this should not affect results too much, as it is noticeable that **the analytic method is about 240 times faster** than the naive approach for 20 cells, at 2K resolution.
 
-From graph reading is can be seen that the analytic approach processing time increases rapidly when the number of cells increase, namely about on the order of $O(n^3)$.
+From graph reading is can be seen that the analytic approach processing time increases rapidly when the number of cells increases, namely about on the order of $O(n^3)$.
 However it remains almost unaffected by the screen resolution, as all the processing can be dispatched with just a few draw calls to the GPU, one per polygon.
 
 Regarding the naive approach, its time complexity increases linearly with respect to the number of cells, but it also spikes dramatically as the screen size increases.
 This correlates with the fact that the time complexity for this method also increases linearly with the number of pixels, that is, quadratically with the display size.
 
-Not to mention that this naive method is already way slower than the analytic approach even for small screen sizes (e.g. in 640x480p, .23s v. .000085s).
+Not to mention that this naive method is already way slower than the analytic approach even for small screen sizes (e.g. in 640x480p, 0.23s naive v. 0.000085s analytic).
 Of course, this benchmark is affected greatly by my hardware, the tools inside Pygame, and the fact that this runs on Python, but the results should look the same in other CPU-side implementations.
 
 There are obvious ways to optimize this, this repo was just made as a proof of concept and to explore the math behind Voronoi diagrams.

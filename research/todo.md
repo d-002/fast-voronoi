@@ -13,6 +13,5 @@
   --> update: don't do that, case with the largest cell being among all others. instead, just don't draw the largest cell, instead just return a large polygon with just the bounds if more than 1 polygon
     --> update 2: don't even do that, useless optimisation as this could make for a larger polygon to draw for the gpu, and this behavior can happen inside of smaller cells too, not just the largest one. if want to optimize this, will have to somehow detect these redundant polygons and don't draw them
 
-- more docs, ex all classes
-- use numpy stuff and compare performance
++ more docs, ex all classes
 - mass testing
