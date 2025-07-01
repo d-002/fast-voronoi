@@ -6,40 +6,39 @@ Should run on Python 3.7+, only tested in Python 3.13.5
 
 ## What are Voronoi diagrams?
 
-A Dirichlet Tesselation, also known as a Voronoi diagram, is a partition of a plane into regions, close to each of a given set of objects (from [Wikipedia](https://en.wikipedia.org/wiki/Voronoi_diagram)).
+(from [Wikipedia](https://en.wikipedia.org/wiki/Voronoi_diagram)) A Dirichlet Tesselation, also known as a Voronoi diagram, is a partition of a plane into regions, close to each of a given set of objects.
 
 As such, given a set of sites on a plane, each one has a corresponding Voronoi cell around it, defined by all points in that plane that are closer to it than any other site.
 
-Below is an example of a Voronoi Diagram:
+Below is an example of a Voronoi diagram:
 
-![]()
+![Non-weighted Voronoi diagram](https://github.com/d-002/fast-voronoi/blob/doc/images/non-weighted.png)
 
-There are many ways to define the distance from a point $P=(x,y)$ to a site $S=(x_0,y_0)$, such as the Euclidian distance $(x-x_0)^2+(y-y_0)^3$.
-In the case of this distance calculation, it is possible for distances to be multiplied by an arbitrary factor. This is called weighted Euclidian distance.
+There are many ways to define the distance from a point $P=(x,y)$ to a site $S=(x_0,y_0)$, such as the Euclidian distance $(x-x_0)^2+(y-y_0)^2$.
+In the case of this distance equation, it is possible for distances to be multiplied by an arbitrary factor. This is called weighted Euclidian distance.
 
-Applying this distance calculation to Voronoi diagrams has many side effects, such as making the boundary between cells curvy:
+Applying this distance calculation to Voronoi diagrams has many side effects, such as making the boundary between cells curvy, sometimes even splitting them in multiple sections:
 
-![]()
+![Weighted Voronoi diagram](https://github.com/d-002/fast-voronoi/blob/doc/images/weighted.png)
 
-## Why is this implementation useful?
+## Motivation
 
-Rendering such a diagram on a display surface is very easy: one could iterate over all the pixels, for each of them iterate over all the sites and keep track of which site is the closest.
+Rendering such a diagram on a display surface is very easy: one may iterate over all the pixels, for each of them iterate over all the sites and keep track of which one is the closest.
 This will give which site the point is closest to.
 
 This is horrifyingly slow when done iteratively, especially for large pixel counts.
-However, the fact that the pixels do not interact with one another can be taken advantage of, by introducing parallel computations such as by using a [shader](https://en.wikipedia.org/wiki/Shader).
+However, the fact that the pixels do not interact with one another can be taken advantage of, by introducing parallel computations, such as by using a [shader](https://en.wikipedia.org/wiki/Shader).
 This approach becomes the favorable one, but then the result is confined to the GPU, unless costly operations are executed.
 
-This implementation of Voronoi diagrams aims to take a more analytic approach to this partitioning method, allowing for a fast evaluation of the shapes of the cells.
+This implementation of Voronoi diagrams aims to take a more analytic approach to this partitioning method, allowing for a fast evaluation of the general shapes of the cells.
 It is still possible to render them just like normal, but without the need for an isolated shader.
 
 Thanks to this implementation, methods like [K-means clustering](https://en.wikipedia.org/wiki/K-means_clustering) can be used very easily depending on the context.
 
-This obviously has a few caveats, namely the time complexity it takes - or at least, it takes me - to compute all the relevant information.
+This obviously has a few caveats, namely its time complexity - or at least, the one I managed to get - to compute all the relevant information.
 For now, the time complexity is around $O(n^3)$.
 
-This might be bad depending on how you intend to use this technique, but for low cell counts and high image resolution it will certainly be worth it.  
-Please see the [performance](#user-content-performance) section.
+This might be bad depending on how you intend to use this technique, but for low cell counts and high image resolution it will certainly be worth it. Please see the [performance](#user-content-performance) section.
 
 ## Images
 
