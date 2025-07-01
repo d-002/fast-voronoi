@@ -1,13 +1,14 @@
-from utils import *
+from utils import smol, perp_bisector, get_equidistant, get_circle, \
+        closest_cell, circle_inter, circle_inter_line
 
+from classes.v2 import v2
 from classes.cell import Cell, FakeCell
 from classes.bounds import Bounds
 from classes.intersection import Intersection
 
-from utils import closest_cell
 
 def cells_intersections(bounds: Bounds, cells: list[Cell],
-                       neighbors: list[list[int]]):
+                        neighbors: list[list[int]]):
     intersections = []
 
     for i, A in enumerate(cells):
@@ -60,6 +61,7 @@ def cells_intersections(bounds: Bounds, cells: list[Cell],
 
     return intersections
 
+
 def add_inter(bounds: Bounds, cells: list[Cell],
               intersections: list[Intersection], inter: v2, component: int,
               i: int, j: int, C: Cell):
@@ -81,6 +83,7 @@ def add_inter(bounds: Bounds, cells: list[Cell],
             return
 
     intersections.append(Intersection(inter, {cells[i], cells[j], C}))
+
 
 def bounds_intersections(bounds: Bounds, cells: list[Cell]
                          ) -> tuple[list[Intersection], list[FakeCell]]:
@@ -147,6 +150,7 @@ def bounds_intersections(bounds: Bounds, cells: list[Cell]
             final.append(inter)
 
     return final, fake_cells
+
 
 def all_intersections(bounds: Bounds, cells: list[Cell],
                       neighbors: list[list[int]]

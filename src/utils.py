@@ -8,7 +8,7 @@ smol = 1e-9
 segments_density = .1
 
 
-## Basic math utils
+### Basic math utils
 
 
 def dot(A: v2, B: v2) -> float:
@@ -47,6 +47,7 @@ def closest_cell(cells: list[Cell], pos: v2) -> int:
             closest_i = i
 
     return closest_i
+
 
 def get_closest_to_line(line: Line, P: v2) -> v2:
     """
@@ -100,10 +101,10 @@ def quadratic(a: float, b: float, c: float) -> list[float]:
     ]
 
 
-## More intricate math utils
+### More intricate math utils
 
 
-def get_equidistant(A: v2, B: v2, C: v2) -> v2|None:
+def get_equidistant(A: v2, B: v2, C: v2) -> v2 | None:
     """
     Let (a) be the perpendicular bisector between A and B, (b) the one between
     A and C, and X the point equidistant to A, B and C.
@@ -178,7 +179,6 @@ def get_circle(A: Cell, B: Cell) -> Circle:
     # second part (with y)
     alpha_y = b_y / (2*a)
     gamma_y = c_y/a - alpha_y*alpha_y
-
 
     # extract the circle center and squared radius from this circle equation
     pos = v2(-alpha_x, -alpha_y)

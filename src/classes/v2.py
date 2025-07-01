@@ -2,6 +2,7 @@ from __future__ import annotations
 from typing import Generator
 from math import sqrt
 
+
 class v2:
     def __init__(self, x: float, y: float):
         self.x = x

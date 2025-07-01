@@ -1,6 +1,7 @@
 from classes.v2 import v2
 from classes.line import Line
 
+
 class Bounds:
     def __init__(self, x: float, y: float, w: float, h: float):
         self.x, self.y = x, y

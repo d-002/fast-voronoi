@@ -5,6 +5,7 @@ from utils import get_dist2
 from classes.v2 import v2
 from classes.cell import Cell
 
+
 def bad_voronoi(W: int, H: int, surf: pygame.Surface, points: list[Cell],
                 colors: list[tuple], step: int = 2):
     """

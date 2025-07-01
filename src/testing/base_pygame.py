@@ -1,6 +1,7 @@
 import pygame
 from pygame.locals import KEYDOWN, K_ESCAPE, QUIT
 
+
 def init(_W: int = 640, _H: int = 480, _fps: int = 60) \
         -> tuple[int, int, pygame.Surface, pygame.font.Font]:
     global W, H, fps, screen, clock, font
@@ -15,6 +16,7 @@ def init(_W: int = 640, _H: int = 480, _fps: int = 60) \
     font = pygame.font.SysFont('consolas', 12)
 
     return (W, H, screen, font)
+
 
 def mainloop(f):
     run = True

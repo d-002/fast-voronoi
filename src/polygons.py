@@ -2,7 +2,8 @@ from typing import cast
 
 from math import cos, sin, atan2, tau, sqrt, ceil
 
-from utils import smol, segments_density, dot, get_dist2, perp_bisector, get_circle
+from utils import smol, segments_density, dot, get_dist2, perp_bisector, \
+        get_circle
 
 from classes.v2 import v2
 from classes.cell import Cell, FakeCell
@@ -32,7 +33,7 @@ class Cache:
         self.edge_cache: dict[tuple[int, int, int, int], list[v2]] = {}
         # line or circle objects between cells
         # (some are duplicated, might improve that in the future)
-        self.edge_objects: list[dict[int, Line|Circle]]
+        self.edge_objects: list[dict[int, Line | Circle]]
 
         # get neighbor relations, cache edge objects
         self.neighbors = [[] for _ in range(len(cells))]
@@ -53,7 +54,7 @@ class Cache:
 
         # get the intersection points and the fake cells
         self.intersections, fake_cells = \
-                all_intersections(bounds, cells, self.neighbors)
+            all_intersections(bounds, cells, self.neighbors)
 
         self.cells = cells
         self.all_cells = cells+fake_cells
@@ -81,7 +82,7 @@ class Cache:
         i0, i1 = self.intersections[i], self.intersections[j]
 
         # special case for borders: simply draw a straight line
-        if type(A) == FakeCell or type(B) == FakeCell:
+        if A is FakeCell or type(B) is FakeCell:
             return [i0.pos, i1.pos]
 
         # normal cells
@@ -89,10 +90,10 @@ class Cache:
         # find out the type of edge
         edge = self.edge_objects[self.cells.index(A)][self.cells.index(B)]
 
-        if type(edge) == Line:
+        if type(edge) is Line:
             return [i0.pos, i1.pos]
 
-        if type(edge) == Circle:
+        if type(edge) is Circle:
             # get angles from the circle center
             d1, d2 = i0.pos-edge.c, i1.pos-edge.c
             a1 = atan2(d1.y, d1.x)
@@ -116,7 +117,7 @@ class Cache:
 
             return points
 
-        return [] # should not happen, but let's please the lsp
+        return []  # should not happen, but let's please the lsp
 
     def get_polygon_edge(self, i: int, j: int, A: Cell, B: Cell) -> list[v2]:
         """
@@ -150,7 +151,6 @@ class Cache:
 
     def build_polygon(self, intersections: list[int],
                       m: int, around: list[Cell]) -> list[v2]:
-
         """
         Merges cached polygon edges into a full polygon from:
         - a list of indices of intersections in self.intersections
@@ -199,7 +199,8 @@ class Cache:
         return points
 
 
-def make_polygons(bounds: Bounds, cells: list[Cell]) -> list[tuple[int, list[v2]]]:
+def make_polygons(bounds: Bounds, cells: list[Cell]
+                  ) -> list[tuple[int, list[v2]]]:
     """
     Returns a list of tuples formed with an integer and a polygon.
     The integers refer to the index of the cell that created the polygon.
@@ -238,7 +239,7 @@ def make_polygons(bounds: Bounds, cells: list[Cell]) -> list[tuple[int, list[v2]
         pairs: list[tuple[Cell, tuple[int, int]]] = []
 
         for B, inter in neighbors.items():
-            edge_line = type(B) == FakeCell or \
+            edge_line = type(B) is FakeCell or \
                     abs(A.weight - B.weight) < smol
 
             if edge_line:
@@ -297,7 +298,7 @@ def make_polygons(bounds: Bounds, cells: list[Cell]) -> list[tuple[int, list[v2]
                     # Sometimes only two cells appear, but the targeted mid
                     # point is outside the bounds. Need to swap in this case
                     if bounds.is_inside(mid):
-                        closest = A # dummy value for lsp
+                        closest = A  # dummy value for lsp
                         closest_dist = -1
 
                         for cell in cells:
