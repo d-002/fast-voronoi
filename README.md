@@ -80,3 +80,47 @@ Of course, this benchmark is affected greatly by my hardware, the tools inside P
 
 There are obvious ways to optimize this, this repo was just made as a proof of concept and to explore the math behind Voronoi diagrams.
 Some improvements could be to use parallelism, NumPy arrays and vector operations, but I will leave this as an exercise for anyone interested.
+
+# Help
+
+I will not give here a complete documentation of the source code, most of the data structures should be identifiable enough by looking at their definition.
+If you have any concerns, feel free to open an issue.
+Here are some basic points to help with the use of the code:
+
+- `src`
+    This is the main source directory, containing a subfolder with testing utilities, another with utility classes, as well as multiple files:
+
+    - `polygons.py`: this file regroups all the information in the intersections and neighbors scripts, as well as create a list of polygons for every cell in the graph.
+    The main function to call here will be `make_polygons()`, and it is described below.
+
+    - `intersections.py`: during the process of creating the polygons, it is useful to compute and organize the intersection points between the diagram's cells.
+    This file contains utilities to complete these tasks.
+
+    - `neighbors.py`: while creating the polygons, finding out which cells are neighbors of a given cell proves to be useful.
+    This file is used in the polygon creation process, but it can be used externally to give further insight on the graph.
+
+    - `test.py`: a Pygame graphical interface used for testing, shows a lot of debug information about a voronoi graph.
+    It is known that it can crash, as on very rare occasions (since the points are placed randomly for testing) multiple points may be in the same position, causing divisions by zero.
+
+    > [!WARNING]
+    > For that reason it is advised to try and avoid this edge case in your applications, either by manually checking for them, or by using techniques that guarantee they will not happen (e.g. hard-coded, distinct sites positions).
+
+    - `utils.py`: a collection of math utilities used throughout the polygon creation algorithm.
+    For example, a way to compute the intersection points between a circle and a line.
+
+- `testing`
+    This subdirectory contains testing utilities used during the development of this project.
+    They are highly turned towards Pygame usage, and help with getting feedback for the project in a graphical way.
+
+- `classes`
+    This subdirectory contains multiple helper classes, and some of them might be worth knowing about:
+
+    - `Bounds`: cells can span an infinitely large space.
+    This does not cause an issue when using the naive approach, as all that is ever rendered is the set of pixels on a surface.
+    However, using the analytic approach, it is impossible to know that in advance.
+    For that, it is advised to use the `Bounds` object, that defines the rectangle the polygons will be allowed to exist in.
+
+    - `v2`: a wrapper around two floats, namely to form a position inside a 2D plane.
+    Provides additional utilities, like adding such objects, or multiplying them by a number.
+
+    - `Cell`: a site, made of a 2D position (`v2` object) and a weight (floating-point value, should be strictly greater than zero).
