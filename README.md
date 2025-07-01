@@ -68,11 +68,11 @@ Here are some basic points to help with the use of the code:
     This file shows a lot of debug information about a voronoi graph, and can be used as a kind of tutorial to see how the different useful functions behave.
     It is known to crash, as on very rare occasions (since the points are placed randomly for testing) multiple points may be in the same position, causing divisions by zero or unexpected behavior.
 
-> [!WARNING]
-> For that reason it is advised to try and avoid this edge case in your applications, either by manually checking for it, or by using techniques that guarantee it will not happen (e.g. hard-coded, distinct sites positions).
-
     - `utils.py`: a collection of math utilities used throughout the polygon creation algorithm.
     For example, a way to compute the intersection points between a circle and a line.
+
+> [!WARNING]
+> For that reason it is advised to try and avoid this edge case in your applications, either by manually checking for it, or by using techniques that guarantee it will not happen (e.g. hard-coded, distinct sites positions).
 
 - `testing`: this subdirectory contains testing utilities used during the development of this project.
     They are highly turned towards Pygame usage, and help with getting feedback for the project in a graphical way.
