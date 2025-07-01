@@ -1,61 +1,47 @@
 # fast-voronoi
-Very fast (multiplicatively weighted) Voronoi diagram display
+Very fast (multiplicatively weighted) Voronoi diagram display.
 
-> [!IMPORTANT]
-> This readme is outdated, stay tuned for updates
+Requirements:
+Should run on Python 3.7+, only tested in Python 3.13.5
 
-3.7+
+## What are Voronoi diagrams?
 
-## Files defined here
+A Dirichlet Tesselation, also known as a Voronoi diagram, is a partition of a plane into regions, close to each of a given set of objects (from [Wikipedia](https://en.wikipedia.org/wiki/Voronoi_diagram)).
 
-- `voronoi.py` Import this file to access main features
-- `test.py` Test file, requires pygame (`pip install pygame`)
+As such, given a set of sites on a plane, each one has a corresponding Voronoi cell around it, defined by all points in that plane that are closer to it than any other site.
 
-## Classes defined here (`voronoi.py`)
+Below is an example of a Voronoi Diagram:
 
-- `BoundingBox(l, t, w, h)`
-    Similar syntax to [`pygame.Rect`](https://www.pygame.org/docs/ref/rect.html)
-    Arguments: `l`: left bound, `t`: top bound, `w`: bound width, `h`: bound height
+![]()
 
-# todo: to check
+There are many ways to define the distance from a point $P=(x,y)$ to a site $S=(x_0,y_0)$, such as the Euclidian distance $(x-x_0)^2+(y-y_0)^3$.
+In the case of this distance calculation, it is possible for distances to be multiplied by an arbitrary factor. This is called weighted Euclidian distance.
 
-- `v2(x, y)`
-    2D vector
+Applying this distance calculation to Voronoi diagrams has many side effects, such as making the boundary between cells curvy:
 
-- `Point(x, y, weight=1)`
-    `v2`, but with an additional weight argument.
-    Represents the center point of a cell.
-    Weight: controls the size of the cell around that point. larger values mean bigger cells.
+![]()
 
-## Important functions defined here (`voronoi.py`)
+## Why is this implementation useful?
 
-- `remove_collisions(points)`
-    Removes collisions from an array of points.  
-    Two points will no longer be able to occupy the same space.  
-    I don't really know what happens otherwise, so I made this quick and bad function, ideally you would handle this case yourself and never have to call this unoptimized function.
+Rendering such a diagram on a display surface is very easy: one could iterate over all the pixels, for each of them iterate over all the sites and keep track of which site is the closest.
+This will give which site the point is closest to.
 
-- `find_neighbors(points, box)`
-    Creates and returns an array of `set`s: one set of neighbors per point. The **first** set in the returned array contains all the neighbors for the **first** point in the `points` array, and so on.  
-    The `box` parameter is used to only consider cells linked in an enclosed area. This box should be of the defined type `BoundingBox`, but something like a `pygame.Rect` should work too.  
-    Here is an example where two cells will definitely be able to join, but outside of the bounding box (the colored portion of the image with cells). In this example, I found it better to not consider the green and brown cells as linked.
-<p align=center><img src="https://github.com/user-attachments/assets/fa98b962-9702-4bac-ab2d-940d84e4a410" /></p>
+This is horrifyingly slow when done iteratively, especially for large pixel counts.
+However, the fact that the pixels do not interact with one another can be taken advantage of, by introducing parallel computations such as by using a [shader](https://en.wikipedia.org/wiki/Shader).
+This approach becomes the favorable one, but then the result is confined to the GPU, unless costly operations are executed.
 
-- `make_polygons(points, box)`
-    Same parameters as `find_neighbors`. Returns both the result of the latter function, as well as a 2D array of points, as a tuple.  
-    The **first** element of the 2D array contains a list of points (correctly ordered) for creating a cell polygon around the **first** point in `points`, and so on.  
-    The cells are cropped to make them fit within the bounding box provided.  
-    I haven't tested what happens with points outside of the bounding box, but I would suppose something really cool happens or the program just crashes. Sorry for not being even a little more formal but I just needed this for a project and thought this was cool. Do with that what you will.
+This implementation of Voronoi diagrams aims to take a more analytic approach to this partitioning method, allowing for a fast evaluation of the shapes of the cells.
+It is still possible to render them just like normal, but without the need for an isolated shader.
 
-## Why is this useful?
+Thanks to this implementation, methods like [K-means clustering](https://en.wikipedia.org/wiki/K-means_clustering) can be used very easily depending on the context.
 
-I have pretty much no formal knowledge on this subject, so I tried to make something relatively efficient, at least on my computer. I will mainly be comparing this approach with the simpler approach of finding which cell each pixel belongs to, which I will call the "naive" approach.
+This obviously has a few caveats, namely the time complexity it takes - or at least, it takes me - to compute all the relevant information.
+For now, the time complexity is around $O(n^3)$.
 
-- **Naive approach**
-    This approach is very slow on my computer, and that's because I was using only the CPU. It should be pretty fast on a GPU, but I can't be bothered. The complexity is basically $O(N\times n)$, with $N$ being the number of pixels in the image and $n$ being the number of cells. This $N$ value can be very large, and I tried to mitigate this issue with this repo and the following approach.  
-    This approach can be tested as well, an implementation has been made in the `test.py` file (`bad_voronoi(points)`).
+This might be bad depending on how you intend to use this technique, but for low cell counts and high image resolution it will certainly be worth it.  
+Please see the [performance](#user-content-performance) section.
 
-- **Current approach**
-    I tried to treat each cell as one unit, because I wouldn't use that many cells when compared to the possible number of pixels in the image. This way I thought it was a good idea to spend like 8 hours on finding a mathematically slower approach in $O(n^3)$, because here $n$ is significantly smaller than $N$ (if it isn't, either you're doing something wrong, or you should use the naive approach and this repo isn't for you).
+## Images
 
 ## Performance
 
@@ -64,7 +50,7 @@ I'm giving 4 non-zero digits no matter the time it takes, so we can easily see w
 The times for the current approach also include any eventual collision removal time, although I think this is too rare to have any impact and is just extra flex.
 
 > [!WARNING]
-> These might be outdated
+> These are old benchmark results
 > 
 > Check the commit at which these were made (before adding POO and weights)  
 > I might add a release for this version as it is faster and you may not want the weights feature
