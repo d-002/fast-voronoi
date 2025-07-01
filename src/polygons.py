@@ -227,8 +227,6 @@ def make_polygons(bounds: Bounds, cells: list[Cell]) -> list[list[list[v2]]]:
                 neighbors.setdefault(B, [])
                 neighbors[B].append(i)
 
-        print(neighbors)
-
         # sort these intersections and split them into small edge sections
         pairs: list[tuple[Cell, tuple[int, int]]] = []
 
@@ -250,8 +248,6 @@ def make_polygons(bounds: Bounds, cells: list[Cell]) -> list[list[list[v2]]]:
                 # sort clockwise otherwise
                 n = cells.index(B)
                 inter.sort(key=lambda i: -cache.inter_angles[n][i])
-
-            print(B, inter)
 
             # The ordering might be offset by angle modulo stuff, fix it:
             # find the midpoint of each of the currently defined intersection
@@ -290,7 +286,6 @@ def make_polygons(bounds: Bounds, cells: list[Cell]) -> list[list[list[v2]]]:
                     amid = (a1+a2) * .5
 
                     mid = edge.c + v2(cos(amid), sin(amid)) * sqrt(edge.r2)
-                    print(a1, a2, mid, edge.c*2-mid)
 
                     # Sometimes only two cells appear, but the targeted mid
                     # point is outside the bounds. Need to swap in this case
@@ -308,8 +303,6 @@ def make_polygons(bounds: Bounds, cells: list[Cell]) -> list[list[list[v2]]]:
                                 closest = cell
 
                         ok = closest == outside
-
-                        print(closest, mid, inside, outside)
                     else:
                         ok = False
 
@@ -318,7 +311,6 @@ def make_polygons(bounds: Bounds, cells: list[Cell]) -> list[list[list[v2]]]:
 
                 if not ok:
                     inter.append(inter.pop(0))
-                print(not ok, inter)
 
             for i in range(0, len(inter), 2):
                 pairs.append((B, (inter[i], inter[i+1])))
@@ -332,7 +324,6 @@ def make_polygons(bounds: Bounds, cells: list[Cell]) -> list[list[list[v2]]]:
                 for i in range(0, len(inter), 2):
                     pairs.append((B, (inter[i], inter[i+1])))
 
-        print('\n', m, [p[1] for p in pairs])
         while pairs:
             first_cell, (i, j) = pairs.pop()
             # points forming the polygon
@@ -365,9 +356,7 @@ def make_polygons(bounds: Bounds, cells: list[Cell]) -> list[list[list[v2]]]:
                 if not changes:
                     break
 
-            print(m, points, other_cells)
-
             # add polygon
             polygons[m].append(cache.build_polygon(points, m, other_cells))
 
-    return polygons
+    return sorted(polygons, key=lambda p: cells[polygons.index(p)].weight)

@@ -71,7 +71,33 @@ def refresh():
     # background
     screen.blit(back, (0, 0))
 
-    # cell centers
+    # draw polygons
+    offset = 0
+    for m, group in enumerate(make_polygons(bounds, cells)):
+        for polygon in group:
+            center = sum(polygon, start=v2(0, 0)) * (1/len(polygon))
+
+            for i in range(len(polygon)):
+                a, b = polygon[i-1], polygon[i]
+                a += (center-a).normalized()*offset
+                b += (center-b).normalized()*offset
+
+                pygame.draw.line(screen, (127, 127, 127), list(a), list(b))
+                #r = 255 - 255*i//len(polygon)
+                #pygame.draw.line(screen, (r, 0, 255-r), list(a), list(b))
+                #slp(.02)
+                #pygame.display.flip()
+
+            pygame.draw.polygon(screen, colors[m], [list(p) for p in polygon])
+            #slp(.2)
+
+    # draw bounds
+    pygame.draw.line(screen, (127, 127, 127), list(bounds.tl), list(bounds.tr))
+    pygame.draw.line(screen, (127, 127, 127), list(bounds.tr), list(bounds.br))
+    pygame.draw.line(screen, (127, 127, 127), list(bounds.bl), list(bounds.br))
+    pygame.draw.line(screen, (127, 127, 127), list(bounds.tl), list(bounds.bl))
+
+    # cells centers
     for cell in cells:
         pygame.draw.circle(screen, (0, 0, 0), list(cell.pos), 5)
 
@@ -90,32 +116,6 @@ def refresh():
     intersections, _ = all_intersections(bounds, cells, neighbors)
     for inter in intersections:
         pygame.draw.circle(screen, (0, 0, 255), list(inter.pos), 3)
-
-    # draw polygons
-    offset = 0
-    for group in make_polygons(bounds, cells):
-        for polygon in group:
-            center = sum(polygon, start=v2(0, 0)) * (1/len(polygon))
-
-            for i in range(len(polygon)):
-                a, b = polygon[i-1], polygon[i]
-                a += (center-a).normalized()*offset
-                b += (center-b).normalized()*offset
-
-                #pygame.draw.line(screen, (127, 127, 127), list(a), list(b))
-                r = 255 - 255*i//len(polygon)
-                pygame.draw.line(screen, (r, 0, 255-r), list(a), list(b))
-                #slp(.02)
-                #pygame.display.flip()
-            #slp(.2)
-
-    # draw bounds
-    """
-    pygame.draw.line(screen, (127, 127, 127), list(bounds.tl), list(bounds.tr))
-    pygame.draw.line(screen, (127, 127, 127), list(bounds.tr), list(bounds.br))
-    pygame.draw.line(screen, (127, 127, 127), list(bounds.bl), list(bounds.br))
-    pygame.draw.line(screen, (127, 127, 127), list(bounds.tl), list(bounds.bl))
-    """
 
     pygame.display.flip()
 
