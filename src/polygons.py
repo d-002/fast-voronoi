@@ -192,6 +192,9 @@ class Cache:
         radius = sqrt(circle.r2)
         N = ceil(tau * radius * segments_density)
 
+        if N < 3:
+            N = 3
+
         points = []
         for k in range(0, N+1):
             a = tau*k/N
