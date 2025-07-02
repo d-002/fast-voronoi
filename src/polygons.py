@@ -110,6 +110,11 @@ class Cache:
         radius = sqrt(circle.r2)
         N = ceil(abs(a2-a1) * radius * segments_density)
 
+        # can happen for very small edges (although the user should try to
+        # avoid them)
+        if not N:
+            N = 1
+
         points = []
         for k in range(0, N+1):
             a = a1 + (a2-a1)*k/N
@@ -334,6 +339,9 @@ def make_polygons(bounds: Bounds, cells: list[Cell]
     ordered so that the polygons for larger cells come first in the list.
     """
 
+    if not cells:
+        return []
+
     cache = Cache(bounds, cells)
     polygons: list[tuple[int, list[v2]]]
     polygons = []
@@ -382,6 +390,8 @@ def make_polygons(bounds: Bounds, cells: list[Cell]
                     break
 
             # add polygon
-            polygons.append((m, cache.build_polygon(points, m, other_cells)))
+            polygon = cache.build_polygon(points, m, other_cells)
+            if len(polygon) > 2:
+                polygons.append((m, polygon))
 
     return sorted(polygons, key=lambda p: cells[p[0]].weight)
