@@ -1,8 +1,8 @@
 from abc import abstractmethod
 from math import ceil, tau
 
-from classes.line import Line
-from classes.bounds import Bounds
+from .line import Line
+from .bounds import Bounds
 
 
 class BlockManager:

@@ -2,22 +2,25 @@ from typing import cast
 
 from math import cos, sin, atan2, tau, sqrt, ceil
 
-from utils import smol, segments_density, dot, get_dist2, perp_bisector, \
+from .utils import smol, dot, get_dist2, perp_bisector, \
         get_circle
 
-from classes.v2 import v2
-from classes.cell import Cell, FakeCell
-from classes.intersection import Intersection
-from classes.bounds import Bounds
-from classes.line import Line
-from classes.circle import Circle
+from .classes.v2 import v2
+from .classes.cell import Cell, FakeCell
+from .classes.intersection import Intersection
+from .classes.bounds import Bounds
+from .classes.line import Line
+from .classes.circle import Circle
+from .classes.options import Options
 
-from neighbors import is_neighbor
-from intersections import all_intersections
+from .neighbors import is_neighbor
+from .intersections import all_intersections
 
 
 class Cache:
-    def __init__(self, bounds: Bounds, cells: list[Cell]):
+    def __init__(self, options: Options, bounds: Bounds, cells: list[Cell]):
+        self.options = options
+
         # intersections angles as seen from each of their related cells
         self.inter_angles: list[dict[int, float]]
         # list of intersections
@@ -89,7 +92,23 @@ class Cache:
         if A is FakeCell or type(B) is FakeCell or \
                 abs(A.weight - B.weight) < smol:
 
-            return [i0.pos, i1.pos]
+            if not self.options.divide_lines:
+                return [i0.pos, i1.pos]
+
+            diff = i1.pos-i0.pos
+            length = diff.length()
+            N = ceil(length * self.options.segments_density)
+
+            # can happen for very small edges (although the user should try to
+            # avoid them)
+            if not N:
+                N = 1
+
+            points = []
+            for k in range(0, N+1):
+                points.append(i0.pos + diff*(k/N))
+
+            return points
 
         # arc edges: approximate them with many points
         circle = cast(Circle, self.edge_objects[m][n])
@@ -108,10 +127,7 @@ class Cache:
                 a1 += tau
 
         radius = sqrt(circle.r2)
-        N = ceil(abs(a2-a1) * radius * segments_density)
-
-        # can happen for very small edges (although the user should try to
-        # avoid them)
+        N = ceil(abs(a2-a1) * radius * self.options.segments_density)
         if not N:
             N = 1
 
@@ -190,7 +206,7 @@ class Cache:
         circle = cast(Circle, self.edge_objects[m][n])
 
         radius = sqrt(circle.r2)
-        N = ceil(tau * radius * segments_density)
+        N = ceil(tau * radius * self.options.segments_density)
 
         if N < 3:
             N = 3
@@ -327,7 +343,7 @@ def build_pairs(bounds: Bounds, cache: Cache, m: int, to_visit: list[int]
     return pairs
 
 
-def make_polygons(bounds: Bounds, cells: list[Cell]
+def make_polygons(options: Options, bounds: Bounds, cells: list[Cell]
                   ) -> list[tuple[int, list[v2]]]:
     """
     Returns a list of tuples formed with an integer and a polygon.
@@ -345,7 +361,7 @@ def make_polygons(bounds: Bounds, cells: list[Cell]
     if not cells:
         return []
 
-    cache = Cache(bounds, cells)
+    cache = Cache(options, bounds, cells)
     polygons: list[tuple[int, list[v2]]]
     polygons = []
 

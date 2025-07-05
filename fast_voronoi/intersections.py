@@ -1,10 +1,10 @@
-from utils import smol, perp_bisector, get_equidistant, get_circle, \
+from .utils import smol, perp_bisector, get_equidistant, get_circle, \
         closest_cell, circle_inter, circle_inter_line
 
-from classes.v2 import v2
-from classes.cell import Cell, FakeCell
-from classes.bounds import Bounds
-from classes.intersection import Intersection
+from .classes.v2 import v2
+from .classes.cell import Cell, FakeCell
+from .classes.bounds import Bounds
+from .classes.intersection import Intersection
 
 
 def cells_intersections(bounds: Bounds, cells: list[Cell],

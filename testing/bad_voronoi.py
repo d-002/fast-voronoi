@@ -1,9 +1,9 @@
 import pygame
 from pygame.locals import Rect
 
-from utils import get_dist2
-from classes.v2 import v2
-from classes.cell import Cell
+import importer
+from fast_voronoi.utils import get_dist2
+from fast_voronoi import v2, Cell
 
 
 def bad_voronoi(W: int, H: int, surf: pygame.Surface, points: list[Cell],

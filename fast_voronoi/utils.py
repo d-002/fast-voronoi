@@ -1,11 +1,10 @@
 from math import sqrt
-from classes.v2 import v2
-from classes.line import Line
-from classes.cell import Cell
-from classes.circle import Circle
+from .classes.v2 import v2
+from .classes.line import Line
+from .classes.cell import Cell
+from .classes.circle import Circle
 
 smol = 1e-9
-segments_density = .1
 
 
 ### Basic math utils

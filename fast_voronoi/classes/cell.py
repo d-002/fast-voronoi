@@ -1,4 +1,4 @@
-from classes.v2 import v2
+from .v2 import v2
 
 
 class Cell:

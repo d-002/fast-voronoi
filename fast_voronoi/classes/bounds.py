@@ -1,5 +1,5 @@
-from classes.v2 import v2
-from classes.line import Line
+from .v2 import v2
+from .line import Line
 
 
 class Bounds:

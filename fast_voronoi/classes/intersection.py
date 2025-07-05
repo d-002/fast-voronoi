@@ -1,5 +1,5 @@
-from classes.v2 import v2
-from classes.cell import Cell
+from .v2 import v2
+from .cell import Cell
 
 
 class Intersection:

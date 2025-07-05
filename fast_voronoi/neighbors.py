@@ -1,14 +1,14 @@
 from math import cos, sin, atan2, tau, sqrt
 
-from utils import smol, dot, get_t, get_closest_to_line, perp_bisector, \
+from .utils import smol, dot, get_t, get_closest_to_line, perp_bisector, \
         get_equidistant, get_dist2, get_circle, circle_inter, circle_inter_line
 
-from classes.v2 import v2
-from classes.cell import Cell
-from classes.line import Line
-from classes.bounds import Bounds
-from classes.circle import Circle
-from classes.block_manager import StraightBlockManager, CircleBlockManager
+from .classes.v2 import v2
+from .classes.cell import Cell
+from .classes.line import Line
+from .classes.bounds import Bounds
+from .classes.circle import Circle
+from .classes.block_manager import StraightBlockManager, CircleBlockManager
 
 
 def cut_line_line(A: Cell, B: Cell, P: Cell, line1: Line,
