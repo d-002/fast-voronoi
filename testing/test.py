@@ -4,17 +4,14 @@ from pygame.locals import KEYDOWN, K_SPACE, K_RETURN
 from random import seed, randint
 from math import cos
 
-from testing.base_pygame import init, mainloop
-from testing.bad_voronoi import bad_voronoi
-from testing.rand_colors import rand_colors
+from base_pygame import init, mainloop
+from bad_voronoi import bad_voronoi
+from rand_colors import rand_colors
 
-from classes.v2 import v2
-from classes.cell import Cell
-from classes.bounds import Bounds
-
-from neighbors import is_neighbor
-from intersections import all_intersections
-from polygons import make_polygons
+from fast_voronoi import v2, Cell, Bounds, Options
+from fast_voronoi.neighbors import is_neighbor
+from fast_voronoi.intersections import all_intersections
+from fast_voronoi.polygons import make_polygons
 
 seed(0)
 
@@ -61,7 +58,7 @@ def refresh():
     screen.blit(back, (0, 0))
 
     # draw polygons
-    for m, polygon in make_polygons(bounds, cells):
+    for m, polygon in make_polygons(options, bounds, cells):
         pygame.draw.polygon(screen, colors[m], [list(p) for p in polygon])
 
     # draw bounds
@@ -82,7 +79,6 @@ def refresh():
                 pygame.draw.line(screen, (0, 255, 0),
                                  list(cells[i].pos),
                                  list(cells[j].pos))
-                neighbors[i].append(j)
                 neighbors[j].append(i)
 
     # intersection points
@@ -117,6 +113,8 @@ def main(events):
     if rerun or animate:
         refresh()
 
+
+options = Options()
 
 cells: list[Cell] = []
 cells_w: list[float] = []

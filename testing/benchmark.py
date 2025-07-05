@@ -1,22 +1,15 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import pygame
-from pygame.locals import KEYDOWN, K_ESCAPE, QUIT
 
 from time import time
 
-# imports from the ../src folder
-import sys
-from os.path import dirname, abspath, join
-sys.path.append(join(dirname(dirname(abspath(__file__))), 'src'))
+import importer
+from fast_voronoi.polygons import make_polygons
+from fast_voronoi import v2, Cell, Bounds, Options
 
-from polygons import make_polygons
-from classes.v2 import v2
-from classes.cell import Cell
-from classes.bounds import Bounds
-
-from testing.bad_voronoi import bad_voronoi
-from testing.rand_colors import rand_colors
+from bad_voronoi import bad_voronoi
+from rand_colors import rand_colors
 
 pygame.init()
 
@@ -25,13 +18,15 @@ n_tests = 10
 
 np.random.seed(6)
 def test_naive(W: int, H: int, screen: pygame.Surface, cells: list[Cell],
-               colors: list[tuple[int, int, int]], bounds: Bounds):
+               colors: list[tuple[int, int, int]], bounds: Bounds,
+               options: Options):
     bad_voronoi(W, H, screen, cells, colors, 1)
 
 
 def test_analytic(W: int, H: int, screen: pygame.Surface, cells: list[Cell],
-                  colors: list[tuple[int, int, int]], bounds: Bounds):
-    for m, polygon in make_polygons(bounds, cells):
+               colors: list[tuple[int, int, int]], bounds: Bounds,
+               options: Options):
+    for m, polygon in make_polygons(options, bounds, cells):
         pygame.draw.polygon(screen, colors[m], [list(p) for p in polygon])
 
 
@@ -45,6 +40,7 @@ def test_func(f, w0: int, h0: int, w1: int, h1: int, size_steps: int,
         screen = pygame.Surface((W, H))
 
         bounds = Bounds(0, 0, W, H)
+        options = Options()
         cells = [Cell(v2(np.random.randint(0, W), np.random.randint(0, H)),
                       1 if not weighted else np.random.random()*4 + 1)
                  for _ in range(n_cells)]
@@ -54,7 +50,7 @@ def test_func(f, w0: int, h0: int, w1: int, h1: int, size_steps: int,
 
         for _ in range(n_tests):
             t0 = time()
-            f(W, H, screen, cells, colors, bounds)
+            f(W, H, screen, cells, colors, bounds, options)
             total_time += time()-t0
         print(f'{n_cells} cells, size {W}x{H}...')
 
