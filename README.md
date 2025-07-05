@@ -54,7 +54,7 @@ Here are some basic points to help with the use of the code:
 
     - `polygons.py`: this file regroups all the information in the intersections and neighbors scripts (see below), as well as create a list of polygons for every cell in the graph.
     **This is the file to import** if you want to try out this implementation, and the useful function will be `make_polygons()`:  
-    This function takes in a `Bounds` object and a list of `Cell` objects, both of which are described below.
+    This function takes in a `Bounds` object, a list of `Cell` objects, and an `Options` object, all of which are described below.
     It returns a list of tuple of `(index, polygon)`.
     The index in each one of these tuples is here to identify which cell created the attached polygon, which itself it a list of `v2` objects, which can easily be converted to a more usable format by applying `list()` to them.
 
@@ -88,6 +88,8 @@ Here are some basic points to help with the use of the code:
     Provides additional utilities, like adding such objects, or multiplying them by a number.
 
     - `Cell`: a site, made of a 2D position (`v2` object) and a weight (floating-point value, should be strictly greater than zero).
+
+    - `Options`: a wrapper around settings used for the generation of polygons, like how many segments to put when rasterizing curved lines, or whether to subdivide straight lines the same way (useful when using the package with Manim).
 
 ## Performance
 
