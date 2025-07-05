@@ -2,7 +2,7 @@
 Very fast (multiplicatively weighted) Voronoi diagram display.
 
 Requirements:
-Should run on Python 3.7+, only tested in Python 3.13.5.
+Should run on Python 3.10+ (use of match), only tested in Python 3.13.5.
 
 ## What are Voronoi diagrams?
 
