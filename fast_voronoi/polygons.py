@@ -361,6 +361,10 @@ def make_polygons(options: Options, bounds: Bounds, cells: list[Cell]
     if not cells:
         return []
 
+    for cell in cells:
+        if not bounds.is_inside(cell.pos):
+            raise ValueError(f'Cell {cell} is outside the bounds')
+
     cache = Cache(options, bounds, cells)
     polygons: list[tuple[int, list[v2]]]
     polygons = []
