@@ -27,5 +27,4 @@ class Options:
 
                 case _:
                     raise ValueError(
-                            f'Options received an unknown keyword argument: {
-                                option}')
+                            f'Options received an unknown keyword argument: {option}')
