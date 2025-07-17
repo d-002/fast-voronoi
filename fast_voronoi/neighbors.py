@@ -207,6 +207,9 @@ def is_neighbor(bounds: Bounds, cells: list[Cell], i: int, j: int) -> bool:
     """
     Checks if the cells inside cells at indices i and j are neighbors
     """
+    if i == j:
+        return False
+
     A, B = cells[i], cells[j]
 
     # base edge is a line
