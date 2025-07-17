@@ -166,8 +166,8 @@ class Cache:
         self.edge_cache[(i, j, m, n)] = points
         return points[:-1]
 
-    def build_polygon(self, intersections: list[int],
-                      m: int, around: list[int]) -> list[v2]:
+    def build_polygon(self, intersections: list[int], m: int,
+                      around: list[int], complete_polygon: bool) -> list[v2]:
         """
         Merges cached polygon edges into a full polygon from:
         - a list of indices of intersections in self.intersections
@@ -188,7 +188,8 @@ class Cache:
             polygon += self.get_polygon_edge(i, j, m, n)
 
         # complete the polygon by going back to the start
-        polygon.append(polygon[0])
+        if complete_polygon:
+            polygon.append(polygon[0])
 
         return polygon
 
@@ -343,12 +344,13 @@ def build_pairs(bounds: Bounds, cache: Cache, m: int, to_visit: list[int]
     return pairs
 
 
-def make_polygons(options: Options, bounds: Bounds, cells: list[Cell]
-                  ) -> list[tuple[int, list[v2]]]:
+def make_polygons(options: Options, bounds: Bounds, cells: list[Cell],
+                  complete_polygon: bool=True) -> list[tuple[int, list[v2]]]:
     """
     Returns a list of tuples formed with an integer and a polygon.
     The integers refer to the index of the cell that created the polygon.
-    A "polygon" is a list of v2 objects, starting and ending on the same point.
+    A "polygon" is a list of v2 objects.
+    The polygon starts and ends on the same point iff complete_polygon is True.
 
     There may be multiple polygons with the same index, as in a weighted
     diagram a cell might be split in multiple distinct parts.
@@ -413,7 +415,8 @@ def make_polygons(options: Options, bounds: Bounds, cells: list[Cell]
                     break
 
             # add polygon
-            polygon = cache.build_polygon(points, m, other_cells)
+            polygon = cache.build_polygon(points, m, other_cells,
+                                          complete_polygon)
             if len(polygon) > 2:
                 polygons.append((m, polygon))
 
