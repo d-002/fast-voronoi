@@ -1,6 +1,8 @@
 from abc import abstractmethod
 from math import ceil, tau
 
+from ..utils import smol
+
 from .line import Line
 from .bounds import Bounds
 
@@ -40,15 +42,15 @@ class StraightBlockManager(BlockManager):
 
         bounds: list[float] = [0]*4
 
-        if line.u.x:
+        if abs(line.u.x) > smol:
             bounds[0] = (box.left-line.M.x) / line.u.x
             bounds[1] = (box.right-line.M.x) / line.u.x
-        if line.u.y:
+        if abs(line.u.y) > smol:
             bounds[2] = (box.top-line.M.y) / line.u.y
             bounds[3] = (box.bottom-line.M.y) / line.u.y
 
-        if line.u.x:
-            if line.u.y:
+        if abs(line.u.x) > smol:
+            if abs(line.u.y) > smol:
                 bounds.sort()
 
                 self.min = max(bounds[:2])
