@@ -344,13 +344,14 @@ def build_pairs(bounds: Bounds, cache: Cache, m: int, to_visit: list[int]
     return pairs
 
 
-def make_polygons(options: Options, bounds: Bounds, cells: list[Cell],
-                  complete_polygon: bool=True) -> list[tuple[int, list[v2]]]:
+def make_polygons(options: Options, bounds: Bounds, cells: list[Cell]
+                  ) -> list[tuple[int, list[v2]]]:
     """
     Returns a list of tuples formed with an integer and a polygon.
     The integers refer to the index of the cell that created the polygon.
     A "polygon" is a list of v2 objects.
-    The polygon starts and ends on the same point iff complete_polygon is True.
+    The polygon starts and ends on the same point iff options.complete_polygon
+    is True.
 
     There may be multiple polygons with the same index, as in a weighted
     diagram a cell might be split in multiple distinct parts.
@@ -416,7 +417,7 @@ def make_polygons(options: Options, bounds: Bounds, cells: list[Cell],
 
             # add polygon
             polygon = cache.build_polygon(points, m, other_cells,
-                                          complete_polygon)
+                                          options.complete_polygon)
             if len(polygon) > 2:
                 polygons.append((m, polygon))
 

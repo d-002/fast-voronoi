@@ -14,6 +14,7 @@ class Options:
 
         self.segments_density = .1
         self.divide_lines = False
+        self.complete_polygon = True
 
         for option, value in kwargs.items():
             match option:
@@ -24,6 +25,9 @@ class Options:
 
                 case 'divide_lines':
                     self.divide_lines = bool(value)
+
+                case 'complete_polygon':
+                    self.complete_polygon = bool(value)
 
                 case _:
                     raise ValueError(
