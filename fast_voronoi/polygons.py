@@ -350,8 +350,6 @@ def make_polygons(options: Options, bounds: Bounds, cells: list[Cell]
     Returns a list of tuples formed with an integer and a polygon.
     The integers refer to the index of the cell that created the polygon.
     A "polygon" is a list of v2 objects.
-    The polygon starts and ends on the same point iff options.complete_polygon
-    is True.
 
     There may be multiple polygons with the same index, as in a weighted
     diagram a cell might be split in multiple distinct parts.
@@ -417,7 +415,7 @@ def make_polygons(options: Options, bounds: Bounds, cells: list[Cell]
 
             # add polygon
             polygon = cache.build_polygon(points, m, other_cells,
-                                          options.complete_polygon)
+                                          options.complete_polygons)
             if len(polygon) > 2:
                 polygons.append((m, polygon))
 
