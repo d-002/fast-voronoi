@@ -18,7 +18,7 @@ Below is an example of a Voronoi diagram, with the sites as black dots and their
 
 ![Non-weighted Voronoi diagram](https://github.com/d-002/fast-voronoi/blob/main/images/non-weighted.png)
 
-There are many ways to define the distance from a point $P=(x,y)$ to a site $S=(x_0,y_0)$, such as the Euclidian distance $(x-x_0)^2+(y-y_0)^2$.
+There are many ways to define the distance from a point $P=(x,y)$ to a site $S=(x_0,y_0)$, such as the Euclidian distance $\sqrt{(x-x_0)^2+(y-y_0)^2}$.
 In the case of this distance equation, it is possible for distances to be multiplied by an arbitrary factor.
 This is called weighted Euclidian distance.
 
@@ -133,3 +133,4 @@ Of course, this benchmark is affected greatly by my hardware, the tools inside P
 
 There are obvious ways to optimize this, this repo was just made as a proof of concept and to explore the math behind Voronoi diagrams.
 Some improvements could be to use parallelism, NumPy arrays and vector operations, but I will leave this as an exercise for anyone interested.
+
