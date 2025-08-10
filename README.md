@@ -1,6 +1,10 @@
 # fast-voronoi
 Very fast (multiplicatively weighted) Voronoi diagram display.
 
+Related SoME4 video:
+
+<p align=center><a href="https://youtu.be/bzLl5TD5SrU" target="_blank"><img src="https://img.youtube.com/vi/bzLl5TD5SrU/0.jpg"></a></p>
+
 Requirements:
 Should run on Python 3.10+ (use of match), only tested in Python 3.13.5.
 
