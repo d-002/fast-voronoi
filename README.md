@@ -68,12 +68,12 @@ Here are some basic points to help with the use of the code:
     - `neighbors.py`: while creating the polygons, finding out which cells are neighbors of a given cell proves to be useful.
     This file is used in the polygon creation process, but it can also be used externally to give further insights on the graph.
 
+    - `utils.py`: a collection of math utilities used throughout the polygon creation algorithm.
+    For example, a way to compute the intersection points between a circle and a line.
+
     - `test.py`: a Pygame graphical interface used for testing.
     This file shows a lot of debug information about a voronoi graph, and can be used as a kind of tutorial to see how the different useful functions behave.
     It is known to crash, as on very rare occasions (since the points are placed randomly for testing) multiple points may be in the same position, causing divisions by zero or unexpected behavior.
-
-    - `utils.py`: a collection of math utilities used throughout the polygon creation algorithm.
-    For example, a way to compute the intersection points between a circle and a line.
 
 > [!WARNING]
 > For that reason it is advised to try and avoid this edge case in your applications, either by manually checking for it, or by using techniques that guarantee it will not happen (e.g. hard-coded, distinct sites positions).
@@ -133,4 +133,5 @@ Of course, this benchmark is affected greatly by my hardware, the tools inside P
 
 There are obvious ways to optimize this, this repo was just made as a proof of concept and to explore the math behind Voronoi diagrams.
 Some improvements could be to use parallelism, NumPy arrays and vector operations, but I will leave this as an exercise for anyone interested.
+
 
